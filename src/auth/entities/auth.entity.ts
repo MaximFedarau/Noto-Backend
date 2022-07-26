@@ -6,7 +6,7 @@ export class Auth {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column()
+  @Column({ unique: true })
   nickname: string;
 
   @Column()
