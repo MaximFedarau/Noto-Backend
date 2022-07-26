@@ -58,7 +58,7 @@ export class AuthService {
       nickname: nickname,
       password: hashedPassword,
     }); // saving user to the database
-    return user;
+    return { id: user.id };
   }
 
   //Logging In
