@@ -31,6 +31,8 @@ export class AuthService {
   ) {}
   private readonly logger = new Logger(AuthService.name); // Nest JS Logger
 
+  // * section: working with credentials
+
   // Signing Up
   async signUp(signupData: SignUpDTO) {
     // * section: beginning of the sign up process
@@ -77,19 +79,36 @@ export class AuthService {
     }
     // * section: creating and assigning JWT tokens
     this.logger.log('Creating and assigning login JWT tokens started.');
-    const tokenPayload = { id: user.id }; // creating payload for JWT token, which will be checked by strategy
+    return await this.creatingAndAssigningJWTTokens({ id: user.id });
+  }
+
+  // * section: working with tokens
+
+  async refreshToken(user?: Auth) {
+    // * section: running user checks
+    if (!user) {
+      this.logger.error('User does not exist.');
+      throw new ForbiddenException('User does not exist.');
+    }
+    // * section: creating and assigning JWT tokens
+    return await this.creatingAndAssigningJWTTokens({ id: user.id });
+  }
+
+  // * section: reusables
+  async creatingAndAssigningJWTTokens(payload: string | object | Buffer) {
     const [accessToken, refreshToken] = await Promise.all([
-      this.jwtService.signAsync(tokenPayload, {
+      this.jwtService.signAsync(payload, {
         // creating access token
         secret: JWT_SECRET,
         expiresIn: '5m', // 5 minutes
       }),
-      this.jwtService.signAsync(tokenPayload, {
+      this.jwtService.signAsync(payload, {
         // creating refresh token
         secret: REFRESH_SECRET,
         expiresIn: '7d', // 7 days
       }),
     ]).catch((err) => {
+      // error handling
       this.logger.error('Error while creating login JWT tokens.');
       throw new InternalServerErrorException(err);
     });
