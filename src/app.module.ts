@@ -4,10 +4,14 @@ import { AuthModule } from 'auth/auth.module';
 
 //Constants
 import * as db from 'constants/db';
+import * as cloudinary from 'constants/cloudinary';
 
 //TypeORM
 import { Auth } from 'auth/entities/auth.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
+
+//Cloudinary
+import { v2 } from 'cloudinary';
 
 @Module({
   imports: [
@@ -24,6 +28,17 @@ import { TypeOrmModule } from '@nestjs/typeorm';
     }),
   ],
   controllers: [],
-  providers: [],
+  providers: [
+    {
+      provide: 'Cloudinary',
+      useFactory: (): any => {
+        return v2.config({
+          cloud_name: cloudinary.CLOUDINARY_CLOUD_NAME,
+          api_key: cloudinary.CLOUDINARY_API_KEY,
+          api_secret: cloudinary.CLOUDINARY_API_SECRET,
+        });
+      },
+    },
+  ],
 })
 export class AppModule {}

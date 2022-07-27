@@ -22,6 +22,9 @@ import { Repository } from 'typeorm';
 //bcrypt
 import * as bcrypt from 'bcrypt';
 
+//Cloudinary
+import { v2 } from 'cloudinary';
+
 @Injectable()
 export class AuthService {
   constructor(
@@ -38,7 +41,8 @@ export class AuthService {
     // * section: beginning of the sign up process
     this.logger.log('Signing up in service started.');
     const { nickname, password } = signupData;
-    // * section: checking is user with these credentials alrady exists
+
+    // * section: checking is user with these credentials already exists
     const checkUserExists = await this.authRepo.findOne({
       where: { nickname: nickname },
     });
@@ -48,10 +52,12 @@ export class AuthService {
         'User with these credentials already exists.',
       );
     }
+
     // * section: hashing the password
     this.logger.log('Hashing the password started.');
     const salt = await bcrypt.genSalt(); //generating salt
     const hashedPassword = await bcrypt.hash(password, salt); //generating hashed password
+
     // * section: creating new user
     this.logger.log('Creating new user started.');
     const user = await this.authRepo.save({
@@ -63,8 +69,8 @@ export class AuthService {
 
   //Logging In
   async logIn(loginData: LogInDTO) {
-    const { nickname, password } = loginData;
     // * section: checking is user exists and password is correct
+    const { nickname, password } = loginData;
     this.logger.log('Credentials check before login started.');
     const user = await this.authRepo.findOne({ where: { nickname: nickname } });
     const passwordIsCorrect =
@@ -77,9 +83,42 @@ export class AuthService {
         'User with these credentials does not exist.',
       );
     }
+
     // * section: creating and assigning JWT tokens
     this.logger.log('Creating and assigning login JWT tokens started.');
     return await this.creatingAndAssigningJWTTokens({ id: user.id });
+  }
+
+  // * section: working with images
+  async uploadImage(file: Express.Multer.File, id: string) {
+    const user = await this.authRepo.findOne({
+      where: { id: id },
+    });
+    if (!user) {
+      throw new ForbiddenException('User does not exist.');
+    }
+    const streamUpload = (): Promise<{ url: string }> => {
+      return new Promise((resolve, reject) => {
+        v2.uploader
+          .upload_stream(
+            {
+              public_id: `NOTO/${id}/avatar`,
+              overwrite: true,
+            },
+            (error, result) => {
+              if (result) {
+                resolve(result);
+              } else {
+                reject(error);
+              }
+            },
+          )
+          .end(file.buffer);
+      });
+    };
+    const result = await streamUpload();
+    user.avatar = result.url;
+    await this.authRepo.save(user);
   }
 
   // * section: working with tokens
@@ -90,6 +129,7 @@ export class AuthService {
       this.logger.error('User does not exist.');
       throw new ForbiddenException('User does not exist.');
     }
+
     // * section: creating and assigning JWT tokens
     return await this.creatingAndAssigningJWTTokens({ id: user.id });
   }

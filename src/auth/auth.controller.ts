@@ -3,11 +3,15 @@ import {
   Logger,
   Controller,
   Post,
+  Param,
   Body,
   ValidationPipe,
   UseGuards,
+  UseInterceptors,
+  UploadedFile,
   Req,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 //Types
 import { AuthRequest } from 'types/authRequest';
@@ -42,6 +46,17 @@ export class AuthController {
     // using validation pipe to validate the body
     this.logger.log('Logging in request was called.');
     return this.authService.logIn(body);
+  }
+
+  // * section: working with images
+  @Post('/image/upload/:id')
+  @UseInterceptors(FileInterceptor('file'))
+  uploadImage(
+    @UploadedFile() file: Express.Multer.File,
+    @Param('id') id: string,
+  ) {
+    this.logger.log('Uploading image request was called.');
+    this.authService.uploadImage(file, id);
   }
 
   // * section: working with tokens
