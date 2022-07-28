@@ -39,7 +39,7 @@ export class AuthService {
   // Signing Up
   async signUp(signupData: SignUpDTO) {
     // * section: beginning of the sign up process
-    this.logger.log('Signing up in service started.');
+    this.logger.log('Signup inside service started.');
     const { nickname, password } = signupData;
 
     // * section: checking is user with these credentials already exists
@@ -48,7 +48,7 @@ export class AuthService {
     });
     if (checkUserExists) {
       this.logger.error(
-        'Signing Up was failed.',
+        'Signup failed.',
         'User with these credentials already exists.',
       );
       throw new ForbiddenException(
@@ -57,7 +57,7 @@ export class AuthService {
     }
 
     // * section: hashing the password
-    this.logger.log('Hashing the password started.');
+    this.logger.log("Hashing user's password started.");
     const salt = await bcrypt.genSalt(); //generating salt
     const hashedPassword = await bcrypt.hash(password, salt); //generating hashed password
 
@@ -67,7 +67,7 @@ export class AuthService {
       nickname: nickname,
       password: hashedPassword,
     }); // saving user to the database
-    this.logger.log('New user was successfully created.');
+    this.logger.log('New user successfully created.');
     return { id: user.id };
   }
 
@@ -75,7 +75,7 @@ export class AuthService {
   async logIn(loginData: LogInDTO) {
     // * section: checking if user exists and password is correct
     const { nickname, password } = loginData;
-    this.logger.log('Credentials check before login started.');
+    this.logger.log('Credentials check before starting the login.');
     const user = await this.authRepo.findOne({ where: { nickname: nickname } });
     const passwordIsCorrect =
       user && user.password
@@ -83,7 +83,7 @@ export class AuthService {
         : false;
     if (!user || !passwordIsCorrect) {
       this.logger.error(
-        'Logging In was failed.',
+        'Login failed.',
         'User with these credentials does not exist.',
       );
       throw new ForbiddenException(
@@ -104,7 +104,7 @@ export class AuthService {
       where: { id: id },
     });
     if (!user) {
-      this.logger.error('Getting public data failed.', 'User does not exist.');
+      this.logger.error('Failed to get public data.', 'User does not exist.');
       throw new ForbiddenException('User does not exist.');
     }
 
@@ -150,7 +150,7 @@ export class AuthService {
     this.logger.log('Image was successfully uploaded.');
     user.avatar = result.url;
     await this.authRepo.save(user);
-    this.logger.log('Image was successfully  saved.');
+    this.logger.log('Image was successfully saved.');
   }
 
   // * section: working with tokens

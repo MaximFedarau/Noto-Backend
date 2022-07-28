@@ -38,14 +38,14 @@ export class AuthController {
   @Post('/signup')
   signUp(@Body(new ValidationPipe()) body: SignUpDTO) {
     // using validation pipe to validate the body
-    this.logger.log('Signing up request was called.');
+    this.logger.log('Signup request was called.');
     return this.authService.signUp(body); // returning the user
   }
 
   @Post('/login')
   logIn(@Body(new ValidationPipe()) body: LogInDTO) {
     // using validation pipe to validate the body
-    this.logger.log('Logging in request was called.');
+    this.logger.log('Login request was called.');
     return this.authService.logIn(body);
   }
 
@@ -78,7 +78,7 @@ export class AuthController {
   @Post('/token/refresh')
   refreshToken(@Req() req: AuthRequest) {
     // using custom type to get user object from the request body
-    this.logger.log('Refreshing token request was called.');
+    this.logger.log('Tokens refreshing request was called.');
     return this.authService.refreshToken(req.user);
   }
 }
