@@ -20,6 +20,7 @@ export class RefreshStrategy extends PassportStrategy(Strategy, 'jwt-refresh') {
     super({
       jwtFromRequest: ExtractJwt.fromExtractors([
         (request: Request) => {
+          if (!request.headers.authorization) return null; // checking if token exists
           const data = request.headers.authorization.slice(7); // cutting of the Bearer part
           if (!data) {
             return null;

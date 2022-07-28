@@ -2,6 +2,7 @@
 import {
   Logger,
   Controller,
+  Get,
   Post,
   Param,
   Body,
@@ -48,22 +49,35 @@ export class AuthController {
     return this.authService.logIn(body);
   }
 
-  // * section: working with images
+  // * section: working with data
+
+  @UseGuards(AuthGuard('jwt'))
+  @Get('/user')
+  getUserPublicData(@Req() req: AuthRequest) {
+    // getting user public data using id from the request body
+    this.logger.log('Fetching public data request was called.');
+    return this.authService.getUserPublicData(req.user.id);
+  }
+
+  @UseGuards(AuthGuard('jwt'))
   @Post('/image/upload/:id')
   @UseInterceptors(FileInterceptor('file'))
-  uploadImage(
+  async uploadImage(
     @UploadedFile() file: Express.Multer.File,
     @Param('id') id: string,
   ) {
+    /* getting uploaded file
+    getting id: 1) set name of the folder; 2) assign image to the user */
     this.logger.log('Uploading image request was called.');
-    this.authService.uploadImage(file, id);
+    await this.authService.uploadImage(file, id);
   }
 
   // * section: working with tokens
+
   @UseGuards(AuthGuard('jwt-refresh')) // checking validity of the token
   @Post('/token/refresh')
   refreshToken(@Req() req: AuthRequest) {
-    // using custom type to get user object from the request
+    // using custom type to get user object from the request body
     this.logger.log('Refreshing token request was called.');
     return this.authService.refreshToken(req.user);
   }

@@ -47,7 +47,10 @@ export class AuthService {
       where: { nickname: nickname },
     });
     if (checkUserExists) {
-      this.logger.error('User with these credentials already exists.');
+      this.logger.error(
+        'Signing Up was failed.',
+        'User with these credentials already exists.',
+      );
       throw new ForbiddenException(
         'User with these credentials already exists.',
       );
@@ -64,12 +67,13 @@ export class AuthService {
       nickname: nickname,
       password: hashedPassword,
     }); // saving user to the database
+    this.logger.log('New user was successfully created.');
     return { id: user.id };
   }
 
   //Logging In
   async logIn(loginData: LogInDTO) {
-    // * section: checking is user exists and password is correct
+    // * section: checking if user exists and password is correct
     const { nickname, password } = loginData;
     this.logger.log('Credentials check before login started.');
     const user = await this.authRepo.findOne({ where: { nickname: nickname } });
@@ -78,7 +82,10 @@ export class AuthService {
         ? await bcrypt.compare(password, user.password)
         : false;
     if (!user || !passwordIsCorrect) {
-      this.logger.error('User with these credentials does not exist.');
+      this.logger.error(
+        'Logging In was failed.',
+        'User with these credentials does not exist.',
+      );
       throw new ForbiddenException(
         'User with these credentials does not exist.',
       );
@@ -89,14 +96,37 @@ export class AuthService {
     return await this.creatingAndAssigningJWTTokens({ id: user.id });
   }
 
+  // * section: working with accessing user data
+
+  async getUserPublicData(id: string) {
+    // * section: checking if user exists
+    const user = await this.authRepo.findOne({
+      where: { id: id },
+    });
+    if (!user) {
+      this.logger.error('Getting public data failed.', 'User does not exist.');
+      throw new ForbiddenException('User does not exist.');
+    }
+
+    //* section: sending public data
+    this.logger.log('Public data was successfully sent.');
+    return {
+      nickname: user.nickname,
+      avatar: user.avatar,
+    };
+  }
+
   // * section: working with images
+
   async uploadImage(file: Express.Multer.File, id: string) {
     const user = await this.authRepo.findOne({
       where: { id: id },
     });
     if (!user) {
+      this.logger.error('Uploading image failed.', 'User does not exist.');
       throw new ForbiddenException('User does not exist.');
     }
+    // uploading image to the cloud (Cloudinary)
     const streamUpload = (): Promise<{ url: string }> => {
       return new Promise((resolve, reject) => {
         v2.uploader
@@ -117,8 +147,10 @@ export class AuthService {
       });
     };
     const result = await streamUpload();
+    this.logger.log('Image was successfully uploaded.');
     user.avatar = result.url;
     await this.authRepo.save(user);
+    this.logger.log('Image was successfully  saved.');
   }
 
   // * section: working with tokens
@@ -126,15 +158,17 @@ export class AuthService {
   async refreshToken(user?: Auth) {
     // * section: running user checks
     if (!user) {
-      this.logger.error('User does not exist.');
+      this.logger.error('Token refreshing failed.', 'User does not exist.');
       throw new ForbiddenException('User does not exist.');
     }
 
     // * section: creating and assigning JWT tokens
+    this.logger.log('Creating and assigning refresh JWT tokens started.');
     return await this.creatingAndAssigningJWTTokens({ id: user.id });
   }
 
   // * section: reusables
+
   async creatingAndAssigningJWTTokens(payload: string | object | Buffer) {
     const [accessToken, refreshToken] = await Promise.all([
       this.jwtService.signAsync(payload, {
