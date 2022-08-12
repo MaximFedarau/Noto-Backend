@@ -1,5 +1,5 @@
 // Nest JS Common
-import { ForbiddenException, Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 
 //TypeORM
 import { InjectRepository } from '@nestjs/typeorm';
@@ -12,6 +12,9 @@ import { Note } from 'notes/entities/note.entity';
 //DTOs
 import { NoteDTO } from './dtos/note.dto';
 
+//Utils
+import { ErrorHandler } from 'utils/ErrorHandler';
+
 @Injectable()
 export class NotesService {
   constructor(
@@ -20,15 +23,13 @@ export class NotesService {
   ) {}
 
   private readonly logger = new Logger(NotesService.name);
+  private readonly errorHandler = new ErrorHandler(NotesService.name);
 
   // * section: notes managing
 
   async createNote(data: NoteDTO, user?: Auth) {
     // * section: running user checks
-    if (!user) {
-      this.logger.error('Creating new note failed.', 'User does not exist.');
-      throw new ForbiddenException('User does not exist.');
-    }
+    this.errorHandler.userExistenceCheck('Creating new note failed.', user);
 
     // * section: creating new note
     const { title, content } = data;
@@ -42,17 +43,13 @@ export class NotesService {
 
   async deleteNote(noteId: string, user?: Auth) {
     // * section: running user checks
-    if (!user) {
-      this.logger.error('Deleting note failed.', 'User does not exist.');
-      throw new ForbiddenException('User does not exist.');
-    }
+    this.errorHandler.userExistenceCheck('Deleting note failed.', user);
+
+    // * section: running note checks
+    const note = await this.notesRepo.findOne({ where: { id: noteId, user } });
+    this.errorHandler.noteExistenceCheck('Deleting note failed.', note);
 
     // * section: deleting note by id
-    const note = await this.notesRepo.findOne({ where: { id: noteId, user } });
-    if (!note) {
-      this.logger.error('Deleting note failed.', 'Note does not exist.');
-      throw new ForbiddenException('Note does not exist.');
-    }
     await this.notesRepo.remove(note);
     this.logger.log('Note was successfully deleted.');
     return {
@@ -62,17 +59,13 @@ export class NotesService {
 
   async updateNote(noteId: string, data: NoteDTO, user?: Auth) {
     // * section: running user checks
-    if (!user) {
-      this.logger.error('Updating note failed.', 'User does not exist.');
-      throw new ForbiddenException('User does not exist.');
-    }
+    this.errorHandler.userExistenceCheck('Updating note failed.', user);
+
+    // * section: running note checks
+    const note = await this.notesRepo.findOne({ where: { id: noteId, user } });
+    this.errorHandler.userExistenceCheck('Updating note failed.', user);
 
     // * section: updating note by id
-    const note = await this.notesRepo.findOne({ where: { id: noteId, user } });
-    if (!note) {
-      this.logger.error('Updating note failed.', 'Note does not exist.');
-      throw new ForbiddenException('Note does not exist.');
-    }
     const { title, content } = data;
     note.title = title || null;
     note.content = content || null;
@@ -85,10 +78,7 @@ export class NotesService {
 
   async getAllNotes(user?: Auth) {
     // * section: running user checks
-    if (!user) {
-      this.logger.error('Getting all notes failed.', 'User does not exist.');
-      throw new ForbiddenException('User does not exist.');
-    }
+    this.errorHandler.userExistenceCheck('Getting all notes failed.', user);
 
     // * section: getting all notes
     const allNotes = await this.notesRepo.find({ where: { user } });
@@ -98,17 +88,13 @@ export class NotesService {
 
   async getNoteById(noteId: string, user?: Auth) {
     // * section: running user checks
-    if (!user) {
-      this.logger.error('Getting note failed.', 'User does not exist.');
-      throw new ForbiddenException('User does not exist.');
-    }
+    this.errorHandler.userExistenceCheck('Getting note failed.', user);
+
+    // * section: running note checks
+    const note = await this.notesRepo.findOne({ where: { id: noteId, user } });
+    this.errorHandler.noteExistenceCheck('Getting note failed.', note);
 
     // * section: getting note by id
-    const note = await this.notesRepo.findOne({ where: { id: noteId, user } });
-    if (!note) {
-      this.logger.error('Getting note failed.', 'Note does not exist.');
-      throw new ForbiddenException('Note does not exist.');
-    }
     this.logger.log('Note was successfully received.');
     return note;
   }

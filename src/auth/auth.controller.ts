@@ -53,7 +53,8 @@ export class AuthController {
   @Get('/user')
   getUserPublicData(@Req() req: AuthRequest) {
     this.logger.log('Fetching public data request was called.');
-    return this.authService.getUserPublicData(req.user.id);
+    const { id } = req.user;
+    return this.authService.getUserPublicData(id);
   }
 
   @UseGuards(AuthGuard('jwt'))
@@ -75,6 +76,7 @@ export class AuthController {
   @Post('/token/refresh')
   refreshToken(@Req() req: AuthRequest) {
     this.logger.log('Tokens refreshing request was called.');
-    return this.authService.refreshToken(req.user);
+    const { user } = req;
+    return this.authService.refreshToken(user);
   }
 }
