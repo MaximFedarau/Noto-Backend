@@ -18,6 +18,6 @@ export class Auth {
   @Column({ nullable: true })
   avatar?: string;
 
-  @OneToMany(() => Note, (note) => note.user)
+  @OneToMany(() => Note, (note) => note.user, { cascade: true })
   notes: Note[];
 }

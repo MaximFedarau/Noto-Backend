@@ -32,7 +32,7 @@ export class AuthService {
     private readonly authRepo: Repository<Auth>, // connecting to TypeORM auth repository (table)
     private readonly jwtService: JwtService, // working with JWT tokens
   ) {}
-  private readonly logger = new Logger(AuthService.name); // Nest JS Logger
+  private readonly logger = new Logger(AuthService.name);
 
   // * section: working with credentials
 

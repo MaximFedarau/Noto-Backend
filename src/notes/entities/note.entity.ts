@@ -10,11 +10,17 @@ export class Note {
   id: string;
 
   @Column({ nullable: true })
-  title: string;
+  title?: string;
 
   @Column({ nullable: true })
-  content: string;
+  content?: string;
 
   @ManyToOne(() => Auth, (auth) => auth.notes)
   user: Auth;
+
+  constructor(title?: string, content?: string, user?: Auth) {
+    this.title = title;
+    this.content = content;
+    this.user = user;
+  }
 }
