@@ -22,10 +22,7 @@ export class RefreshStrategy extends PassportStrategy(Strategy, 'jwt-refresh') {
         (request: Request) => {
           if (!request.headers.authorization) return null; // checking if token exists
           const data = request.headers.authorization.slice(7); // cutting of the Bearer part
-          if (!data) {
-            return null;
-          }
-          return data;
+          return data || null;
         },
       ]),
       secretOrKey: REFRESH_SECRET,

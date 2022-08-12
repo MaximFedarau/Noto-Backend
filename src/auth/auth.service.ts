@@ -78,9 +78,7 @@ export class AuthService {
     this.logger.log('Credentials check before starting the login.');
     const user = await this.authRepo.findOne({ where: { nickname: nickname } });
     const passwordIsCorrect =
-      user && user.password
-        ? await bcrypt.compare(password, user.password)
-        : false;
+      user?.password && (await bcrypt.compare(password, user.password));
     if (!user || !passwordIsCorrect) {
       this.logger.error(
         'Login failed.',
