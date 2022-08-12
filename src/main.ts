@@ -8,6 +8,6 @@ import helmet from 'helmet';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.use(helmet()); // using helmet to secure the application
-  await app.listen(5000); // listening on port 5000
+  await app.listen(5000);
 }
 bootstrap();

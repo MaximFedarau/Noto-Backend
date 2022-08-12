@@ -36,13 +36,10 @@ export class AuthService {
 
   // * section: working with credentials
 
-  // Signing Up
   async signUp(signupData: SignUpDTO) {
-    // * section: beginning of the sign up process
+    // * section: checking is user with these credentials already exists
     this.logger.log('Signup inside service started.');
     const { nickname, password } = signupData;
-
-    // * section: checking is user with these credentials already exists
     const checkUserExists = await this.authRepo.findOne({
       where: { nickname: nickname },
     });
@@ -58,20 +55,19 @@ export class AuthService {
 
     // * section: hashing the password
     this.logger.log("Hashing user's password started.");
-    const salt = await bcrypt.genSalt(); //generating salt
-    const hashedPassword = await bcrypt.hash(password, salt); //generating hashed password
+    const salt = await bcrypt.genSalt();
+    const hashedPassword = await bcrypt.hash(password, salt);
 
     // * section: creating new user
     this.logger.log('Creating new user started.');
     const user = await this.authRepo.save({
       nickname: nickname,
       password: hashedPassword,
-    }); // saving user to the database
+    });
     this.logger.log('New user successfully created.');
     return { id: user.id };
   }
 
-  //Logging In
   async logIn(loginData: LogInDTO) {
     // * section: checking if user exists and password is correct
     const { nickname, password } = loginData;
@@ -172,15 +168,14 @@ export class AuthService {
       this.jwtService.signAsync(payload, {
         // creating access token
         secret: JWT_SECRET,
-        expiresIn: '5m', // 5 minutes
+        expiresIn: '5m',
       }),
       this.jwtService.signAsync(payload, {
         // creating refresh token
         secret: REFRESH_SECRET,
-        expiresIn: '7d', // 7 days
+        expiresIn: '7d',
       }),
     ]).catch((err) => {
-      // error handling
       this.logger.error('Error while creating login JWT tokens.');
       throw new InternalServerErrorException(err);
     });
