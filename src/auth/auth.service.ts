@@ -8,7 +8,7 @@ import { Logger } from '@nestjs/common';
 
 //DTOs
 import { SignUpDTO } from 'auth/dtos/signUp.dto';
-import { LogInDTO } from './dtos/logIn.dto';
+import { LogInDTO } from 'auth/dtos/logIn.dto';
 
 //Passport
 import { JWT_SECRET, REFRESH_SECRET } from 'constants/jwt';
@@ -168,7 +168,7 @@ export class AuthService {
       this.jwtService.signAsync(payload, {
         // creating access token
         secret: JWT_SECRET,
-        expiresIn: '5m',
+        expiresIn: '5m', //  5 minutes
       }),
       this.jwtService.signAsync(payload, {
         // creating refresh token

@@ -19,7 +19,7 @@ import { AuthRequest } from 'types/authRequest';
 
 //DTOs
 import { SignUpDTO } from 'auth/dtos/signUp.dto';
-import { LogInDTO } from './dtos/logIn.dto';
+import { LogInDTO } from 'auth/dtos/logIn.dto';
 
 //Service
 import { AuthService } from 'auth/auth.service';
@@ -29,9 +29,9 @@ import { AuthGuard } from '@nestjs/passport';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {} // Auth Service
+  constructor(private readonly authService: AuthService) {}
 
-  private readonly logger = new Logger(AuthController.name); // Nest JS Logger
+  private readonly logger = new Logger(AuthController.name);
 
   // * section: working with credentials
 

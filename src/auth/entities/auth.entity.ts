@@ -1,5 +1,8 @@
 //TypeORM
-import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
+
+//Entities
+import { Note } from 'notes/entities/note.entity';
 
 @Entity()
 export class Auth {
@@ -14,4 +17,7 @@ export class Auth {
 
   @Column({ nullable: true })
   avatar?: string;
+
+  @OneToMany(() => Note, (note) => note.user)
+  notes: Note[];
 }
