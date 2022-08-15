@@ -15,10 +15,14 @@ export class Note {
   @Column({ nullable: true })
   content?: string;
 
+  @Column()
+  date: Date;
+
   @ManyToOne(() => Auth, (auth) => auth.notes)
   user: Auth;
 
-  constructor(title?: string, content?: string, user?: Auth) {
+  constructor(date: Date, title?: string, content?: string, user?: Auth) {
+    this.date = date;
     this.title = title;
     this.content = content;
     this.user = user;

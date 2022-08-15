@@ -33,7 +33,7 @@ export class NotesService {
 
     // * section: creating new note
     const { title, content } = data;
-    const newNote = new Note(title, content, user);
+    const newNote = new Note(new Date(), title, content, user);
     const createdNote = await this.notesRepo.save(newNote);
     this.logger.log('Note was successfully created.');
     return {
@@ -81,7 +81,10 @@ export class NotesService {
     this.errorHandler.userExistenceCheck('Getting all notes failed.', user);
 
     // * section: getting all notes
-    const allNotes = await this.notesRepo.find({ where: { user } });
+    const allNotes = await this.notesRepo.find({
+      where: { user },
+      order: { date: 'ASC' },
+    });
     this.logger.log('All notes were successfully received.');
     return allNotes;
   }
