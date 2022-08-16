@@ -36,9 +36,7 @@ export class NotesService {
     const newNote = new Note(new Date(), title, content, user);
     const createdNote = await this.notesRepo.save(newNote);
     this.logger.log('Note was successfully created.');
-    return {
-      id: createdNote.id,
-    };
+    return createdNote;
   }
 
   async deleteNote(noteId: string, user?: Auth) {
