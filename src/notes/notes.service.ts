@@ -67,6 +67,7 @@ export class NotesService {
     const { title, content } = data;
     note.title = title || null;
     note.content = content || null;
+    note.date = new Date();
     const updatedNote = await this.notesRepo.save(note);
     this.logger.log('Note was successfully updated.');
     return updatedNote;
