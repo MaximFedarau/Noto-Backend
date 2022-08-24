@@ -4,6 +4,7 @@ import {
   Logger,
   Body,
   Param,
+  Query,
   Req,
   Controller,
   Post,
@@ -11,6 +12,8 @@ import {
   ParseUUIDPipe,
   Delete,
   Put,
+  ParseIntPipe,
+  ValidationPipe,
 } from '@nestjs/common';
 
 //Types
@@ -27,6 +30,7 @@ import { NotePipe } from 'notes/pipes/note.pipe';
 
 //DTOs
 import { NoteDTO } from 'notes/dtos/note.dto';
+import { SearchDTO } from 'notes/dtos/search.dto';
 
 @UseGuards(AuthGuard('jwt'))
 @Controller('notes')
@@ -66,12 +70,15 @@ export class NotesController {
   }
 
   // * section: notes receiving
-
-  @Get('/')
-  getAllNotes(@Req() req: AuthRequest) {
-    this.logger.log('Getting all notes request was called.');
+  @Get('/pack/:packNumber')
+  getNotePack(
+    @Req() req: AuthRequest,
+    @Param('packNumber', new ParseIntPipe()) packNumber: number,
+    @Query(new ValidationPipe()) patterns: SearchDTO,
+  ) {
+    this.logger.log('Getting note pack request was called.');
     const { user } = req;
-    return this.notesService.getAllNotes(user);
+    return this.notesService.getNotePack(packNumber - 1, patterns, user); // decreasing pack number by 1, because pack number starts from 1
   }
 
   @Get('/:id')

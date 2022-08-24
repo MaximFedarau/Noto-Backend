@@ -1,16 +1,17 @@
 // Nest JS Common
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 
 //TypeORM
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, ILike } from 'typeorm';
 
 //Entities
 import { Auth } from 'auth/entities/auth.entity';
 import { Note } from 'notes/entities/note.entity';
 
 //DTOs
-import { NoteDTO } from './dtos/note.dto';
+import { NoteDTO } from 'notes/dtos/note.dto';
+import { SearchDTO } from 'notes/dtos/search.dto';
 
 //Utils
 import { ErrorHandler } from 'utils/ErrorHandler';
@@ -75,17 +76,30 @@ export class NotesService {
 
   // * section: notes receiving
 
-  async getAllNotes(user?: Auth) {
-    // * section: running user checks
-    this.errorHandler.userExistenceCheck('Getting all notes failed.', user);
+  async getNotePack(packNumber: number, patterns?: SearchDTO, user?: Auth) {
+    // * section: running received data checks
+    this.errorHandler.userExistenceCheck('Getting note pack failed.', user);
+    if (packNumber < 0) {
+      throw new BadRequestException('Pack number cannot be less than 1.');
+    }
 
-    // * section: getting all notes
-    const allNotes = await this.notesRepo.find({
-      where: { user },
+    // * section: getting note packs
+    const { pattern } = patterns;
+    // using ILike to make search case insensitive
+    const [notePack, totalNotes] = await this.notesRepo.findAndCount({
+      where: [
+        { user, title: ILike(`%${pattern || ''}%`) },
+        { user, content: ILike(`%${pattern || ''}%`) },
+      ],
       order: { date: 'ASC' },
+      skip: packNumber * 10,
+      take: 10,
     });
-    this.logger.log('All notes were successfully received.');
-    return allNotes;
+    this.logger.log('Note pack was successfully received.');
+    return {
+      notePack,
+      isEnd: totalNotes <= (packNumber + 1) * 10,
+    };
   }
 
   async getNoteById(noteId: string, user?: Auth) {

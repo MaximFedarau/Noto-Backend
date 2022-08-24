@@ -1,12 +1,8 @@
 // Class validator
 import { IsString, IsOptional } from 'class-validator';
 
-export class NoteDTO {
+export class SearchDTO {
   @IsString()
   @IsOptional()
-  title?: string;
-
-  @IsString()
-  @IsOptional()
-  content?: string;
+  pattern?: string;
 }
