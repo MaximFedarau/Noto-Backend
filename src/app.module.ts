@@ -1,6 +1,7 @@
 // Nest JS
 import { Module } from '@nestjs/common';
 import { AuthModule } from 'auth/auth.module';
+import { NotesModule } from 'notes/notes.module';
 
 //Constants
 import * as db from 'constants/db';
@@ -8,6 +9,7 @@ import * as cloudinary from 'constants/cloudinary';
 
 //TypeORM
 import { Auth } from 'auth/entities/auth.entity';
+import { Note } from 'notes/entities/note.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 //Cloudinary
@@ -23,9 +25,10 @@ import { v2 } from 'cloudinary';
       username: db.DB_USERNAME,
       password: db.DB_PASSWORD,
       database: db.DB_NAME,
-      entities: [Auth],
+      entities: [Auth, Note],
       synchronize: true, // ! Change this to false in prod
     }),
+    NotesModule,
   ],
   controllers: [],
   providers: [

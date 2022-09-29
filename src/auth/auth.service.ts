@@ -8,16 +8,20 @@ import { Logger } from '@nestjs/common';
 
 //DTOs
 import { SignUpDTO } from 'auth/dtos/signUp.dto';
-import { LogInDTO } from './dtos/logIn.dto';
+import { LogInDTO } from 'auth/dtos/logIn.dto';
 
 //Passport
 import { JWT_SECRET, REFRESH_SECRET } from 'constants/jwt';
 import { JwtService } from '@nestjs/jwt';
 
-//TypeORM
-import { Auth } from 'auth/entities/auth.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+
+//Entities
+import { Auth } from 'auth/entities/auth.entity';
+
+//Utils
+import { ErrorHandler } from 'utils/ErrorHandler';
 
 //bcrypt
 import * as bcrypt from 'bcrypt';
@@ -32,7 +36,9 @@ export class AuthService {
     private readonly authRepo: Repository<Auth>, // connecting to TypeORM auth repository (table)
     private readonly jwtService: JwtService, // working with JWT tokens
   ) {}
-  private readonly logger = new Logger(AuthService.name); // Nest JS Logger
+
+  private readonly logger = new Logger(AuthService.name);
+  private readonly errorHandler = new ErrorHandler(AuthService.name);
 
   // * section: working with credentials
 
@@ -97,10 +103,7 @@ export class AuthService {
     const user = await this.authRepo.findOne({
       where: { id: id },
     });
-    if (!user) {
-      this.logger.error('Failed to get public data.', 'User does not exist.');
-      throw new ForbiddenException('User does not exist.');
-    }
+    this.errorHandler.userExistenceCheck('Failed to get public data.', user);
 
     //* section: sending public data
     this.logger.log('Public data was successfully sent.');
@@ -116,10 +119,7 @@ export class AuthService {
     const user = await this.authRepo.findOne({
       where: { id: id },
     });
-    if (!user) {
-      this.logger.error('Uploading image failed.', 'User does not exist.');
-      throw new ForbiddenException('User does not exist.');
-    }
+    this.errorHandler.userExistenceCheck('Uploading image failed.', user);
     // uploading image to the cloud (Cloudinary)
     const streamUpload = (): Promise<{ url: string }> => {
       return new Promise((resolve, reject) => {
@@ -151,10 +151,7 @@ export class AuthService {
 
   async refreshToken(user?: Auth) {
     // * section: running user checks
-    if (!user) {
-      this.logger.error('Token refreshing failed.', 'User does not exist.');
-      throw new ForbiddenException('User does not exist.');
-    }
+    this.errorHandler.userExistenceCheck('Token refreshing failed.', user);
 
     // * section: creating and assigning JWT tokens
     this.logger.log('Creating and assigning refresh JWT tokens started.');

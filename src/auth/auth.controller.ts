@@ -19,7 +19,7 @@ import { AuthRequest } from 'types/authRequest';
 
 //DTOs
 import { SignUpDTO } from 'auth/dtos/signUp.dto';
-import { LogInDTO } from './dtos/logIn.dto';
+import { LogInDTO } from 'auth/dtos/logIn.dto';
 
 //Service
 import { AuthService } from 'auth/auth.service';
@@ -29,9 +29,9 @@ import { AuthGuard } from '@nestjs/passport';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {} // Auth Service
+  constructor(private readonly authService: AuthService) {}
 
-  private readonly logger = new Logger(AuthController.name); // Nest JS Logger
+  private readonly logger = new Logger(AuthController.name);
 
   // * section: working with credentials
 
@@ -53,7 +53,8 @@ export class AuthController {
   @Get('/user')
   getUserPublicData(@Req() req: AuthRequest) {
     this.logger.log('Fetching public data request was called.');
-    return this.authService.getUserPublicData(req.user.id);
+    const { id } = req.user;
+    return this.authService.getUserPublicData(id);
   }
 
   @UseGuards(AuthGuard('jwt'))
@@ -75,6 +76,7 @@ export class AuthController {
   @Post('/token/refresh')
   refreshToken(@Req() req: AuthRequest) {
     this.logger.log('Tokens refreshing request was called.');
-    return this.authService.refreshToken(req.user);
+    const { user } = req;
+    return this.authService.refreshToken(user);
   }
 }
