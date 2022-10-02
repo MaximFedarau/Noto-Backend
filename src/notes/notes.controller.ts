@@ -1,4 +1,3 @@
-// Nest JS Common
 import {
   UseGuards,
   Logger,
@@ -15,22 +14,13 @@ import {
   ParseIntPipe,
   ValidationPipe,
 } from '@nestjs/common';
-
-//Types
-import { AuthRequest } from 'types/authRequest';
-
-// Passport
 import { AuthGuard } from '@nestjs/passport';
 
-//Service
-import { NotesService } from './notes.service';
-
-//Pipes
+import { NotesService } from 'notes/notes.service';
 import { NotePipe } from 'notes/pipes/note.pipe';
-
-//DTOs
 import { NoteDTO } from 'notes/dtos/note.dto';
 import { SearchDTO } from 'notes/dtos/search.dto';
+import { AuthRequest } from 'types/authRequest';
 
 @UseGuards(AuthGuard('jwt'))
 @Controller('notes')

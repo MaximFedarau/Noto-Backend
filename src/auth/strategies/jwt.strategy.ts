@@ -1,16 +1,12 @@
-// Nest JS Common and Express
 import { UnauthorizedException } from '@nestjs/common';
 import { Request } from 'express';
-
-//Passport
-import { JWT_SECRET } from 'constants/jwt';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
-
-// TypeORM
-import { Auth } from 'auth/entities/auth.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+
+import { Auth } from 'auth/entities/auth.entity';
+import { JWT_SECRET } from 'constants/jwt';
 
 export class JWTStrategy extends PassportStrategy(Strategy) {
   constructor(

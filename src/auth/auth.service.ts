@@ -1,33 +1,20 @@
-// Nest JS Common
 import {
   Injectable,
   ForbiddenException,
   InternalServerErrorException,
 } from '@nestjs/common';
 import { Logger } from '@nestjs/common';
-
-//DTOs
-import { SignUpDTO } from 'auth/dtos/signUp.dto';
-import { LogInDTO } from 'auth/dtos/logIn.dto';
-
-//Passport
-import { JWT_SECRET, REFRESH_SECRET } from 'constants/jwt';
 import { JwtService } from '@nestjs/jwt';
-
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-
-//Entities
-import { Auth } from 'auth/entities/auth.entity';
-
-//Utils
-import { ErrorHandler } from 'utils/ErrorHandler';
-
-//bcrypt
 import * as bcrypt from 'bcrypt';
-
-//Cloudinary
 import { v2 } from 'cloudinary';
+
+import { Auth } from 'auth/entities/auth.entity';
+import { SignUpDTO } from 'auth/dtos/signUp.dto';
+import { LogInDTO } from 'auth/dtos/logIn.dto';
+import { JWT_SECRET, REFRESH_SECRET } from 'constants/jwt';
+import { ErrorHandler } from 'utils/ErrorHandler';
 
 @Injectable()
 export class AuthService {

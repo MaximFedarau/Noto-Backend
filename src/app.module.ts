@@ -1,23 +1,18 @@
-// Nest JS
 import { Module } from '@nestjs/common';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { v2 } from 'cloudinary';
+
 import { AuthModule } from 'auth/auth.module';
 import { NotesModule } from 'notes/notes.module';
-
-//Constants
-import * as db from 'constants/db';
-import * as cloudinary from 'constants/cloudinary';
-
-//TypeORM
 import { Auth } from 'auth/entities/auth.entity';
 import { Note } from 'notes/entities/note.entity';
-import { TypeOrmModule } from '@nestjs/typeorm';
-
-//Cloudinary
-import { v2 } from 'cloudinary';
+import * as db from 'constants/db';
+import * as cloudinary from 'constants/cloudinary';
 
 @Module({
   imports: [
     AuthModule,
+    NotesModule,
     TypeOrmModule.forRoot({
       type: 'postgres',
       host: db.DB_HOST,
@@ -28,7 +23,6 @@ import { v2 } from 'cloudinary';
       entities: [Auth, Note],
       synchronize: true, // ! Change this to false in prod
     }),
-    NotesModule,
   ],
   controllers: [],
   providers: [

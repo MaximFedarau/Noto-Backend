@@ -1,19 +1,11 @@
-// Nest JS Common
 import { Injectable, Logger, BadRequestException } from '@nestjs/common';
-
-//TypeORM
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, ILike } from 'typeorm';
 
-//Entities
-import { Auth } from 'auth/entities/auth.entity';
 import { Note } from 'notes/entities/note.entity';
-
-//DTOs
+import { Auth } from 'auth/entities/auth.entity';
 import { NoteDTO } from 'notes/dtos/note.dto';
 import { SearchDTO } from 'notes/dtos/search.dto';
-
-//Utils
 import { ErrorHandler } from 'utils/ErrorHandler';
 
 @Injectable()

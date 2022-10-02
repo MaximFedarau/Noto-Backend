@@ -1,7 +1,5 @@
-//Nest Js Common
 import { ForbiddenException, Injectable, Logger } from '@nestjs/common';
 
-//Entitites
 import { Auth } from 'auth/entities/auth.entity';
 import { Note } from 'notes/entities/note.entity';
 

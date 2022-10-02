@@ -1,7 +1,5 @@
-//TypeORM
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
 
-//Entities
 import { Note } from 'notes/entities/note.entity';
 
 @Entity()

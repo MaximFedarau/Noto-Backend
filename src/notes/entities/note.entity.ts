@@ -1,7 +1,5 @@
-//TypeORM
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
 
-//Entities
 import { Auth } from 'auth/entities/auth.entity';
 
 @Entity()
