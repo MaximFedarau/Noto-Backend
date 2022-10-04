@@ -4,6 +4,7 @@ import { v2 } from 'cloudinary';
 
 import { AuthModule } from 'auth/auth.module';
 import { NotesModule } from 'notes/notes.module';
+import { EventsModule } from 'events/events.module';
 import { Auth } from 'auth/entities/auth.entity';
 import { Note } from 'notes/entities/note.entity';
 import * as db from 'constants/db';
@@ -13,6 +14,7 @@ import * as cloudinary from 'constants/cloudinary';
   imports: [
     AuthModule,
     NotesModule,
+    EventsModule,
     TypeOrmModule.forRoot({
       type: 'postgres',
       host: db.DB_HOST,
