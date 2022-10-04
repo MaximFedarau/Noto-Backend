@@ -15,9 +15,9 @@ export class JWTStrategy extends PassportStrategy(Strategy) {
   ) {
     super({
       jwtFromRequest: ExtractJwt.fromExtractors([
-        (request: Request) => {
-          if (!request.headers.authorization) return null; // checking if token exists
-          const data = request.headers.authorization.slice(7); // cutting of the Bearer part
+        ({ headers }: Request) => {
+          if (!headers.authorization) return null; // checking if token exists
+          const data = headers.authorization.slice(7); // cutting of the Bearer part
           return data || null;
         },
       ]),
