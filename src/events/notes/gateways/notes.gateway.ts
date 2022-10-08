@@ -12,6 +12,7 @@ import { Socket } from 'socket.io';
 
 import { WebsocketExceptionsFilter } from 'events/notes/filters/notes.filter';
 import { WsAuthGuard } from 'events/guards/ws.guard';
+import { WsRequest } from 'types/wsRequest';
 
 @WebSocketGateway({
   namespace: 'notes',
@@ -27,12 +28,19 @@ export class NotesGateway
   @UseFilters(new WebsocketExceptionsFilter())
   @UseGuards(WsAuthGuard)
   @SubscribeMessage('newNote')
-  handleSendMessage(
-    @ConnectedSocket() client: Socket,
-    @MessageBody() data: string,
-    @Request() req: any,
-  ) {
+  handleNewNote(@MessageBody() data: string) {
     console.log(data);
+  }
+
+  @UseFilters(new WebsocketExceptionsFilter())
+  @UseGuards(WsAuthGuard)
+  @SubscribeMessage('joinRoom')
+  handleJoinRoom(
+    @ConnectedSocket() client: Socket,
+    @Request() { handshake }: WsRequest,
+  ) {
+    const id = handshake.user.id;
+    client.join(id);
   }
 
   // * section: lifecycle hooks
