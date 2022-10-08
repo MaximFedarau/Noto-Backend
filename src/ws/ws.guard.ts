@@ -4,7 +4,7 @@ import { WsException } from '@nestjs/websockets';
 import { AuthGuard } from '@nestjs/passport';
 
 @Injectable()
-export class WsAuthGuard extends AuthGuard('ws') {
+export class WebSocketAuthGuard extends AuthGuard('ws') {
   canActivate(
     context: ExecutionContext,
   ): boolean | Promise<boolean> | Observable<boolean> {

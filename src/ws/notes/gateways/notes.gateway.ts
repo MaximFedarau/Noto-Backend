@@ -10,11 +10,12 @@ import {
 import { Logger, UseGuards, UseFilters, Request } from '@nestjs/common';
 import { Socket } from 'socket.io';
 
-import { WebsocketExceptionsFilter } from 'events/notes/filters/notes.filter';
-import { NotePipe } from 'events/notes/pipes/newNote.pipe';
-import { WsAuthGuard } from 'events/guards/ws.guard';
+import { NotesService } from 'notes/notes.service';
+import { WebsocketExceptionsFilter } from 'ws/notes/filters/notes.filter';
+import { WebSocketAuthGuard } from 'ws/ws.guard';
+import { NotePipe } from 'ws/notes/pipes/newNote.pipe';
+import { NoteDTO } from 'ws/notes/dtos/note.dto';
 import { WsRequest } from 'types/wsRequest';
-import { NoteDTO } from 'events/notes/dtos/note.dto';
 
 @WebSocketGateway({
   namespace: 'notes',
@@ -28,14 +29,14 @@ export class NotesGateway
   private readonly logger = new Logger(NotesGateway.name);
 
   @UseFilters(new WebsocketExceptionsFilter())
-  @UseGuards(WsAuthGuard)
+  @UseGuards(WebSocketAuthGuard)
   @SubscribeMessage('newNote')
   handleNewNote(@MessageBody(new NotePipe()) data: NoteDTO) {
     console.log(data);
   }
 
   @UseFilters(new WebsocketExceptionsFilter())
-  @UseGuards(WsAuthGuard)
+  @UseGuards(WebSocketAuthGuard)
   @SubscribeMessage('joinRoom')
   handleJoinRoom(
     @ConnectedSocket() client: Socket,
