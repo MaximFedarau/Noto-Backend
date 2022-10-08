@@ -11,8 +11,10 @@ import { Logger, UseGuards, UseFilters, Request } from '@nestjs/common';
 import { Socket } from 'socket.io';
 
 import { WebsocketExceptionsFilter } from 'events/notes/filters/notes.filter';
+import { NotePipe } from 'events/notes/pipes/newNote.pipe';
 import { WsAuthGuard } from 'events/guards/ws.guard';
 import { WsRequest } from 'types/wsRequest';
+import { NoteDTO } from 'events/notes/dtos/note.dto';
 
 @WebSocketGateway({
   namespace: 'notes',
@@ -28,7 +30,7 @@ export class NotesGateway
   @UseFilters(new WebsocketExceptionsFilter())
   @UseGuards(WsAuthGuard)
   @SubscribeMessage('newNote')
-  handleNewNote(@MessageBody() data: string) {
+  handleNewNote(@MessageBody(new NotePipe()) data: NoteDTO) {
     console.log(data);
   }
 

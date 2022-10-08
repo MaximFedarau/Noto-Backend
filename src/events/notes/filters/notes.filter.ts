@@ -11,6 +11,6 @@ export class WebsocketExceptionsFilter extends BaseWsExceptionFilter {
         ? exception.getError()
         : exception.getResponse();
     const details = error instanceof Object ? { ...error } : { message: error };
-    client.emit('error', { ...details });
+    client.emit('error', { status: 404, ...details });
   }
 }
