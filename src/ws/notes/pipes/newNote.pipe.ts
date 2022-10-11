@@ -3,9 +3,17 @@ import { WsException } from '@nestjs/websockets';
 import { plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
 
+import { WsErrorCodes } from 'types/ws/errorCodes';
+
 @Injectable()
 export class NotePipe implements PipeTransform {
   async transform(value: any, { metatype }: ArgumentMetadata) {
+    if (!value) {
+      throw new WsException({
+        status: WsErrorCodes.BAD_REQUEST,
+        message: ['Validation failed: No data submitted'],
+      });
+    }
     if (!metatype || !this.toValidate(metatype)) {
       return value;
     }
@@ -20,12 +28,12 @@ export class NotePipe implements PipeTransform {
         errorMessages = [...errorMessages, ...Object.values(error.constraints)];
       });
       throw new WsException({
-        status: 400,
+        status: WsErrorCodes.BAD_REQUEST,
         message: errorMessages,
       });
     }
     throw new WsException({
-      status: 400,
+      status: WsErrorCodes.BAD_REQUEST,
       message: ['At least one field is required'],
     });
   }

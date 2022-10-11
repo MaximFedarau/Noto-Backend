@@ -16,7 +16,8 @@ import { WebsocketExceptionsFilter } from 'ws/notes/filters/notes.filter';
 import { WebSocketAuthGuard } from 'ws/ws.guard';
 import { NotePipe } from 'ws/notes/pipes/newNote.pipe';
 import { NoteDTO } from 'ws/notes/dtos/note.dto';
-import { WsRequest } from 'types/wsRequest';
+import { WsRequest } from 'types/ws/wsRequest';
+import { NoteStatuses } from 'types/ws/noteStatuses';
 
 @WebSocketGateway({
   namespace: 'notes',
@@ -37,13 +38,24 @@ export class NotesGateway
   @UseFilters(new WebsocketExceptionsFilter())
   @UseGuards(WebSocketAuthGuard)
   @SubscribeMessage('newNote')
-  handleNewNote(
+  async handleNewNote(
     @MessageBody(new NotePipe()) data: NoteDTO,
     @Request() { handshake }: WsRequest,
   ) {
     const { user } = handshake;
-    this.notesService.createNote(data, user);
-    this.server.to(user.id).emit('update', data);
+    const { id, title, content } = await this.notesService.createNote(
+      data,
+      user,
+    );
+    this.server.to(user.id).emit('update', {
+      status: NoteStatuses.CREATED,
+      note: {
+        id,
+        title,
+        content,
+      },
+    });
+    this.logger.debug(`New note created: ${id}.`);
   }
 
   @UseFilters(new WebsocketExceptionsFilter())
@@ -55,6 +67,7 @@ export class NotesGateway
   ) {
     const id = handshake.user.id;
     client.join(id);
+    this.logger.debug(`Client ${client.id} joined room ${id}.`);
   }
 
   // * section: lifecycle hooks
@@ -64,10 +77,10 @@ export class NotesGateway
   }
 
   handleConnection(client: Socket) {
-    this.logger.debug(`Client connected: ${client.id}`);
+    this.logger.debug(`Client connected: ${client.id}.`);
   }
 
   handleDisconnect(client: Socket) {
-    this.logger.debug(`Client disconnected: ${client.id}`);
+    this.logger.debug(`Client disconnected: ${client.id}.`);
   }
 }
