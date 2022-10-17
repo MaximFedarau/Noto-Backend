@@ -12,7 +12,8 @@ import { Logger, UseGuards, UseFilters, Request } from '@nestjs/common';
 import { Socket, Server } from 'socket.io';
 
 import { NotesService } from 'notes/notes.service';
-import { WebsocketExceptionsFilter } from 'ws/notes/filters/notes.filter';
+import { GlobalExceptionsFilter } from 'ws/notes/filters/global.filter';
+import { LocalExceptionsFilter } from 'ws/notes/filters/local.filter';
 import { WebSocketAuthGuard } from 'ws/ws.guard';
 import { NotePipe } from 'ws/notes/pipes/newNote.pipe';
 import { NoteDTO } from 'ws/notes/dtos/note.dto';
@@ -35,30 +36,31 @@ export class NotesGateway
   @WebSocketServer()
   server: Server;
 
-  @UseFilters(new WebsocketExceptionsFilter())
+  @UseFilters(new LocalExceptionsFilter(NoteStatuses.CREATED))
   @UseGuards(WebSocketAuthGuard)
   @SubscribeMessage('newNote')
   async handleNewNote(
-    @MessageBody(new NotePipe()) data: NoteDTO,
+    @ConnectedSocket() client: Socket,
+    @MessageBody(new NotePipe()) messageBody: NoteDTO,
     @Request() { handshake }: WsRequest,
   ) {
     const { user } = handshake;
-    const { id, title, content } = await this.notesService.createNote(
-      data,
+    const { id, title, content, date } = await this.notesService.createNote(
+      messageBody,
       user,
     );
-    this.server.to(user.id).emit('update', {
+
+    const data = {
       status: NoteStatuses.CREATED,
-      note: {
-        id,
-        title,
-        content,
-      },
-    });
+      note: { id, title, content, date },
+    };
+
+    client.broadcast.to(user.id).emit('global', data); // send to all room members, except the sender
+    client.emit('local', data);
     this.logger.debug(`New note created: ${id}.`);
   }
 
-  @UseFilters(new WebsocketExceptionsFilter())
+  @UseFilters(new GlobalExceptionsFilter())
   @UseGuards(WebSocketAuthGuard)
   @SubscribeMessage('joinRoom')
   handleJoinRoom(
@@ -67,6 +69,7 @@ export class NotesGateway
   ) {
     const id = handshake.user.id;
     client.join(id);
+    client.emit('joinRoom'); // pending
     this.logger.debug(`Client ${client.id} joined room ${id}.`);
   }
 

@@ -11,12 +11,17 @@ export class NotePipe implements PipeTransform {
     if (!value) {
       throw new WsException({
         status: WsErrorCodes.BAD_REQUEST,
-        message: ['Validation failed: No data submitted'],
+        message: ['No data submitted'],
+        data: {
+          note: value,
+        },
       });
     }
+
     if (!metatype || !this.toValidate(metatype)) {
       return value;
     }
+
     const object = plainToInstance(metatype, value);
     const errors = await validate(object);
 
@@ -30,11 +35,18 @@ export class NotePipe implements PipeTransform {
       throw new WsException({
         status: WsErrorCodes.BAD_REQUEST,
         message: errorMessages,
+        data: {
+          note: value,
+        },
       });
     }
+
     throw new WsException({
       status: WsErrorCodes.BAD_REQUEST,
       message: ['At least one field is required'],
+      data: {
+        note: value,
+      },
     });
   }
 

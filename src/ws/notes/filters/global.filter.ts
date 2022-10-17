@@ -5,7 +5,7 @@ import { Socket } from 'socket.io';
 import { WsErrorCodes } from 'types/ws/errorCodes';
 
 @Catch(WsException, HttpException)
-export class WebsocketExceptionsFilter extends BaseWsExceptionFilter {
+export class GlobalExceptionsFilter extends BaseWsExceptionFilter {
   catch(exception: WsException | HttpException, host: ArgumentsHost) {
     const client = host.switchToWs().getClient() as Socket;
     const error =
@@ -13,6 +13,9 @@ export class WebsocketExceptionsFilter extends BaseWsExceptionFilter {
         ? exception.getError()
         : exception.getResponse();
     const details = error instanceof Object ? { ...error } : { message: error };
-    client.emit('error', { status: WsErrorCodes.UNAUTHORIZED, ...details });
+    client.emit('globalError', {
+      status: WsErrorCodes.UNAUTHORIZED,
+      ...details,
+    });
   }
 }
