@@ -6,7 +6,6 @@ import {
   Query,
   Req,
   Controller,
-  Post,
   Get,
   ParseUUIDPipe,
   Delete,
@@ -30,14 +29,6 @@ export class NotesController {
   private readonly logger = new Logger(NotesController.name);
 
   // * section: notes managing
-
-  @Post('/')
-  createNote(@Body(new NotePipe()) data: NoteDTO, @Req() req: AuthRequest) {
-    this.logger.log('Creating note request was called.');
-    const { user } = req;
-    return this.notesService.createNote(data, user);
-  }
-
   @Delete('/:id')
   deleteNote(
     @Req() req: AuthRequest,

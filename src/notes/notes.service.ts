@@ -54,7 +54,7 @@ export class NotesService {
 
     // * section: running note checks
     const note = await this.notesRepo.findOne({ where: { id: noteId, user } });
-    this.errorHandler.userExistenceCheck('Updating note failed.', user);
+    this.errorHandler.noteExistenceCheck('Updating note failed.', note);
 
     // * section: updating note by id
     const { title, content } = data;
