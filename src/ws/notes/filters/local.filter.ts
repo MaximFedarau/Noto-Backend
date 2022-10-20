@@ -19,18 +19,20 @@ export class LocalExceptionsFilter extends BaseWsExceptionFilter {
         : exception.getResponse();
     const details = error instanceof Object ? { ...error } : { message: error };
 
-    const data = host.switchToWs().getData();
+    const emittedData = {
+      status: WsErrorCodes.UNAUTHORIZED,
+      data: {
+        status: this.noteStatus,
+        note: host.switchToWs().getData(),
+      },
+      ...details,
+    };
 
     switch (this.noteStatus) {
       case NoteStatuses.CREATED:
-        client.emit('localError', {
-          status: WsErrorCodes.UNAUTHORIZED,
-          data: {
-            status: this.noteStatus,
-            note: data,
-          },
-          ...details,
-        });
+        client.emit('localError', emittedData);
+      case NoteStatuses.DELETED:
+        client.emit('localError', emittedData);
     }
   }
 }

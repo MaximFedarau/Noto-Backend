@@ -16,9 +16,11 @@ import { GlobalExceptionsFilter } from 'ws/notes/filters/global.filter';
 import { LocalExceptionsFilter } from 'ws/notes/filters/local.filter';
 import { WebSocketAuthGuard } from 'ws/ws.guard';
 import { NotePipe } from 'ws/notes/pipes/newNote.pipe';
+import { DeleteNotePipe } from 'ws/notes/pipes/deleteNote.pipe';
 import { NoteDTO } from 'ws/notes/dtos/note.dto';
 import { WsRequest } from 'types/ws/wsRequest';
 import { NoteStatuses } from 'types/ws/noteStatuses';
+import { NoteIdDTO } from '../dtos/noteId.dto';
 
 @WebSocketGateway({
   namespace: 'notes',
@@ -58,6 +60,27 @@ export class NotesGateway
     client.broadcast.to(user.id).emit('global', data); // send to all room members, except the sender
     client.emit('local', data);
     this.logger.debug(`New note created: ${id}.`);
+  }
+
+  @UseFilters(new LocalExceptionsFilter(NoteStatuses.DELETED))
+  @UseGuards(WebSocketAuthGuard)
+  @SubscribeMessage('deleteNote')
+  async handleDeleteNote(
+    @ConnectedSocket() client: Socket,
+    @MessageBody(new DeleteNotePipe()) { noteId }: NoteIdDTO,
+    @Request() { handshake }: WsRequest,
+  ) {
+    const { user } = handshake;
+    await this.notesService.deleteNote(noteId, user);
+
+    const data = {
+      status: NoteStatuses.DELETED,
+      note: { id: noteId },
+    };
+
+    client.broadcast.to(user.id).emit('global', data); // send to all room members, except the sender
+    client.emit('local', data);
+    this.logger.debug(`Note was deleted: ${noteId}.`);
   }
 
   @UseFilters(new GlobalExceptionsFilter())
