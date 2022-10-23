@@ -58,8 +58,8 @@ export class NotesService {
 
     // * section: updating note by id
     const { title, content } = data;
-    note.title = title || null;
-    note.content = content || null;
+    note.title = title || undefined;
+    note.content = content || undefined;
     note.date = new Date();
     const updatedNote = await this.notesRepo.save(note);
     this.logger.log('Note was successfully updated.');
