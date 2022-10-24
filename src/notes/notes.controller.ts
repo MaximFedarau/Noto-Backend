@@ -8,7 +8,6 @@ import {
   Controller,
   Get,
   ParseUUIDPipe,
-  Delete,
   Put,
   ParseIntPipe,
   ValidationPipe,
@@ -29,16 +28,6 @@ export class NotesController {
   private readonly logger = new Logger(NotesController.name);
 
   // * section: notes managing
-  @Delete('/:id')
-  deleteNote(
-    @Req() req: AuthRequest,
-    @Param('id', new ParseUUIDPipe()) id: string,
-  ) {
-    this.logger.log('Deleting note request was called.');
-    const { user } = req;
-    return this.notesService.deleteNote(id, user);
-  }
-
   @Put('/:id')
   updateNote(
     @Req() req: AuthRequest,

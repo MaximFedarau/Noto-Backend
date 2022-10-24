@@ -28,11 +28,6 @@ export class LocalExceptionsFilter extends BaseWsExceptionFilter {
       ...details,
     };
 
-    switch (this.noteStatus) {
-      case NoteStatuses.CREATED:
-        client.emit('localError', emittedData);
-      case NoteStatuses.DELETED:
-        client.emit('localError', emittedData);
-    }
+    client.emit('localError', emittedData);
   }
 }

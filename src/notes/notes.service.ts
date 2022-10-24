@@ -34,11 +34,11 @@ export class NotesService {
 
   async deleteNote(noteId: string, user?: Auth) {
     // * section: running user checks
-    this.errorHandler.userExistenceCheck('Deleting note failed.', user);
+    this.errorHandler.userExistenceCheck('Deleting note failed.', user, true);
 
     // * section: running note checks
     const note = await this.notesRepo.findOne({ where: { id: noteId, user } });
-    this.errorHandler.noteExistenceCheck('Deleting note failed.', note);
+    this.errorHandler.noteExistenceCheck('Deleting note failed.', note, true);
 
     // * section: deleting note by id
     await this.notesRepo.remove(note);
