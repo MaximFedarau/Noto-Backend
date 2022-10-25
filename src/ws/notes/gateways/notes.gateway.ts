@@ -78,12 +78,19 @@ export class NotesGateway
       note: { id: noteId },
     };
 
-    // todo when deleting note send as second parameter the isDeleteOrigin flag
-    // todo it means that the note was deleted by the user who receives message
-    // todo in client, using this flag, we can decide what to do if user is on the note page
+    // ? when deleting note, we send isDeleteOrigin flag as the second parameter
+    // ? if true, it means, that the note was deleted by the user who receives message
+    // ? in client, using this flag, we can decide what to do if user is on the note page
 
     client.broadcast.to(user.id).emit('global', data); // send to all room members, except the sender
-    client.emit('local', data);
+    client.broadcast.to(user.id).emit('local', {
+      ...data,
+      isDeleteOrigin: false, // false, because the note was deleted not by any of room members
+    });
+    client.emit('local', {
+      ...data,
+      isDeleteOrigin: true, // true, because the note was deleted by the sender
+    });
     this.logger.debug(`Note was deleted: ${noteId}.`);
   }
 
