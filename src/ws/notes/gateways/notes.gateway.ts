@@ -40,7 +40,7 @@ export class NotesGateway
 
   @UseFilters(new LocalExceptionsFilter(NoteStatuses.CREATED))
   @UseGuards(WebSocketAuthGuard)
-  @SubscribeMessage('newNote')
+  @SubscribeMessage('createNote')
   async handleNewNote(
     @ConnectedSocket() client: Socket,
     @MessageBody(new NotePipe()) messageBody: NoteDTO,
