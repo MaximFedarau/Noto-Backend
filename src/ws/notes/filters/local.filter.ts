@@ -5,7 +5,7 @@ import { Socket } from 'socket.io';
 import { WsErrorCodes } from 'types/ws/errorCodes';
 import { NoteStatuses } from 'types/ws/noteStatuses';
 
-@Catch(WsException, HttpException)
+@Catch()
 export class LocalExceptionsFilter extends BaseWsExceptionFilter {
   constructor(private readonly noteStatus: NoteStatuses) {
     super();

@@ -22,7 +22,11 @@ export class NotesService {
 
   async createNote(data: NoteDTO, user?: Auth) {
     // * section: running user checks
-    this.errorHandler.userExistenceCheck('Creating new note failed.', user);
+    this.errorHandler.userExistenceCheck(
+      'Creating new note failed.',
+      user,
+      true,
+    );
 
     // * section: creating new note
     const { title, content } = data;
@@ -50,16 +54,16 @@ export class NotesService {
 
   async updateNote(noteId: string, data: NoteDTO, user?: Auth) {
     // * section: running user checks
-    this.errorHandler.userExistenceCheck('Updating note failed.', user);
+    this.errorHandler.userExistenceCheck('Updating note failed.', user, true);
 
     // * section: running note checks
     const note = await this.notesRepo.findOne({ where: { id: noteId, user } });
-    this.errorHandler.noteExistenceCheck('Updating note failed.', note);
+    this.errorHandler.noteExistenceCheck('Updating note failed.', note, true);
 
     // * section: updating note by id
     const { title, content } = data;
-    note.title = title || undefined;
-    note.content = content || undefined;
+    note.title = title || '';
+    note.content = content || '';
     note.date = new Date();
     const updatedNote = await this.notesRepo.save(note);
     this.logger.log('Note was successfully updated.');

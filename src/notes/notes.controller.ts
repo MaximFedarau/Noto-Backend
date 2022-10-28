@@ -1,22 +1,18 @@
 import {
   UseGuards,
   Logger,
-  Body,
   Param,
   Query,
   Req,
   Controller,
   Get,
   ParseUUIDPipe,
-  Put,
   ParseIntPipe,
   ValidationPipe,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 
 import { NotesService } from 'notes/notes.service';
-import { NotePipe } from 'notes/pipes/note.pipe';
-import { NoteDTO } from 'notes/dtos/note.dto';
 import { SearchDTO } from 'notes/dtos/search.dto';
 import { AuthRequest } from 'types/authRequest';
 
@@ -26,18 +22,6 @@ export class NotesController {
   constructor(private readonly notesService: NotesService) {}
 
   private readonly logger = new Logger(NotesController.name);
-
-  // * section: notes managing
-  @Put('/:id')
-  updateNote(
-    @Req() req: AuthRequest,
-    @Param('id', new ParseUUIDPipe()) id: string,
-    @Body(new NotePipe()) data: NoteDTO,
-  ) {
-    this.logger.log('Updating note request was called.');
-    const { user } = req;
-    return this.notesService.updateNote(id, data, user);
-  }
 
   // * section: notes receiving
   @Get('/pack/:packNumber')

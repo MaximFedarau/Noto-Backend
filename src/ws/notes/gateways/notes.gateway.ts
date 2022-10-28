@@ -15,12 +15,13 @@ import { NotesService } from 'notes/notes.service';
 import { GlobalExceptionsFilter } from 'ws/notes/filters/global.filter';
 import { LocalExceptionsFilter } from 'ws/notes/filters/local.filter';
 import { WebSocketAuthGuard } from 'ws/ws.guard';
-import { NotePipe } from 'ws/notes/pipes/newNote.pipe';
+import { NotePipe } from 'ws/notes/pipes/note.pipe';
 import { DeleteNotePipe } from 'ws/notes/pipes/deleteNote.pipe';
 import { NoteDTO } from 'ws/notes/dtos/note.dto';
 import { WsRequest } from 'types/ws/wsRequest';
 import { NoteStatuses } from 'types/ws/noteStatuses';
 import { NoteIdDTO } from '../dtos/noteId.dto';
+import { NoteWithIdDTO } from '../dtos/noteWithId.dto';
 
 @WebSocketGateway({
   namespace: 'notes',
@@ -38,6 +39,7 @@ export class NotesGateway
   @WebSocketServer()
   server: Server;
 
+  // ! we use custom filter for global and local errors => it sends error to the client
   @UseFilters(new LocalExceptionsFilter(NoteStatuses.CREATED))
   @UseGuards(WebSocketAuthGuard)
   @SubscribeMessage('createNote')
@@ -92,6 +94,27 @@ export class NotesGateway
       isDeleteOrigin: true, // true, because the note was deleted by the sender
     });
     this.logger.debug(`Note was deleted: ${noteId}.`);
+  }
+
+  @UseFilters(new LocalExceptionsFilter(NoteStatuses.UPDATED))
+  @UseGuards(WebSocketAuthGuard)
+  @SubscribeMessage('updateNote')
+  async handleUpdateNote(
+    @ConnectedSocket() client: Socket,
+    @MessageBody(new NotePipe()) { id, ...messageBody }: NoteWithIdDTO,
+    @Request() { handshake }: WsRequest,
+  ) {
+    const { user } = handshake;
+    const note = await this.notesService.updateNote(id, messageBody, user);
+
+    const data = {
+      status: NoteStatuses.UPDATED,
+      note,
+    };
+
+    client.broadcast.to(user.id).emit('global', data); // send to all room members, except the sender
+    client.emit('local', data);
+    this.logger.debug(`Note is updated: ${id}.`);
   }
 
   @UseFilters(new GlobalExceptionsFilter())
