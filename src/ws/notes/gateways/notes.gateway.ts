@@ -59,7 +59,7 @@ export class NotesGateway
       note: { id, title, content, date },
     };
 
-    client.broadcast.to(user.id).emit('global', data); // send to all room members, except the sender
+    this.server.to(user.id).emit('global', data); // send to all room members
     client.emit('local', data);
     this.logger.debug(`New note created: ${id}.`);
   }
@@ -84,7 +84,7 @@ export class NotesGateway
     // ? if true, it means, that the note was deleted by the user who receives message
     // ? in client, using this flag, we can decide what to do if user is on the note page
 
-    client.broadcast.to(user.id).emit('global', data); // send to all room members, except the sender
+    this.server.to(user.id).emit('global', data); // send to all room members
     client.broadcast.to(user.id).emit('local', {
       ...data,
       isDeleteOrigin: false, // false, because the note was deleted not by any of room members
@@ -112,7 +112,7 @@ export class NotesGateway
       note,
     };
 
-    client.broadcast.to(user.id).emit('global', data); // send to all room members, except the sender
+    this.server.to(user.id).emit('global', data); // send to all room members
     client.emit('local', data);
     this.logger.debug(`Note is updated: ${id}.`);
   }

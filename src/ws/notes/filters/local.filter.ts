@@ -25,7 +25,7 @@ export class LocalExceptionsFilter extends BaseWsExceptionFilter {
         status: this.noteStatus,
         note: host.switchToWs().getData(),
       },
-      ...details,
+      ...details, // rewrite status and data if they are in details
     };
 
     client.emit('localError', emittedData);

@@ -13,9 +13,10 @@ export class GlobalExceptionsFilter extends BaseWsExceptionFilter {
         ? exception.getError()
         : exception.getResponse();
     const details = error instanceof Object ? { ...error } : { message: error };
+
     client.emit('globalError', {
       status: WsErrorCodes.UNAUTHORIZED,
-      ...details,
+      ...details, // rewrite status and data if they are in details
     });
   }
 }
