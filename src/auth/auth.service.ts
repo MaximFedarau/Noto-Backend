@@ -102,36 +102,46 @@ export class AuthService {
 
   // * section: working with images
 
+  // uploading image to Cloudinary
+  streamUpload(
+    { buffer }: Express.Multer.File,
+    id: string,
+  ): Promise<{ url: string }> {
+    return new Promise((resolve, reject) => {
+      v2.uploader
+        .upload_stream(
+          {
+            public_id: `NOTO/${id}/avatar`,
+            overwrite: true,
+          },
+          (error, result) => {
+            if (result) resolve(result);
+            else reject(error);
+          },
+        )
+        .end(buffer);
+    });
+  }
+
   async uploadImage(file: Express.Multer.File, id: string) {
     const user = await this.authRepo.findOne({
-      where: { id: id },
+      where: { id },
     });
     this.errorHandler.userExistenceCheck('Uploading image failed.', user);
-    // uploading image to the cloud (Cloudinary)
-    const streamUpload = (): Promise<{ url: string }> => {
-      return new Promise((resolve, reject) => {
-        v2.uploader
-          .upload_stream(
-            {
-              public_id: `NOTO/${id}/avatar`,
-              overwrite: true,
-            },
-            (error, result) => {
-              if (result) {
-                resolve(result);
-              } else {
-                reject(error);
-              }
-            },
-          )
-          .end(file.buffer);
-      });
-    };
-    const result = await streamUpload();
-    this.logger.log('Image was successfully uploaded.');
-    user.avatar = result.url;
-    await this.authRepo.save(user);
-    this.logger.log('Image was successfully saved.');
+
+    try {
+      const { url } = await this.streamUpload(file, id);
+      this.logger.log('Image was successfully uploaded.');
+      user.avatar = url;
+      await this.authRepo.save(user);
+      this.logger.log('Image was successfully saved.');
+    } catch (error) {
+      this.logger.error(
+        'Image uploading failed.',
+        error.message ? error.message : error,
+      );
+      throw new InternalServerErrorException('Image uploading failed.');
+    }
   }
 
   // * section: working with tokens
