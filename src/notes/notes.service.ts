@@ -1,19 +1,11 @@
-// Nest JS Common
 import { Injectable, Logger, BadRequestException } from '@nestjs/common';
-
-//TypeORM
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, ILike } from 'typeorm';
 
-//Entities
-import { Auth } from 'auth/entities/auth.entity';
 import { Note } from 'notes/entities/note.entity';
-
-//DTOs
+import { Auth } from 'auth/entities/auth.entity';
 import { NoteDTO } from 'notes/dtos/note.dto';
 import { SearchDTO } from 'notes/dtos/search.dto';
-
-//Utils
 import { ErrorHandler } from 'utils/ErrorHandler';
 
 @Injectable()
@@ -30,7 +22,11 @@ export class NotesService {
 
   async createNote(data: NoteDTO, user?: Auth) {
     // * section: running user checks
-    this.errorHandler.userExistenceCheck('Creating new note failed.', user);
+    this.errorHandler.userExistenceCheck(
+      'Creating new note failed.',
+      user,
+      true,
+    );
 
     // * section: creating new note
     const { title, content } = data;
@@ -42,11 +38,11 @@ export class NotesService {
 
   async deleteNote(noteId: string, user?: Auth) {
     // * section: running user checks
-    this.errorHandler.userExistenceCheck('Deleting note failed.', user);
+    this.errorHandler.userExistenceCheck('Deleting note failed.', user, true);
 
     // * section: running note checks
     const note = await this.notesRepo.findOne({ where: { id: noteId, user } });
-    this.errorHandler.noteExistenceCheck('Deleting note failed.', note);
+    this.errorHandler.noteExistenceCheck('Deleting note failed.', note, true);
 
     // * section: deleting note by id
     await this.notesRepo.remove(note);
@@ -58,16 +54,16 @@ export class NotesService {
 
   async updateNote(noteId: string, data: NoteDTO, user?: Auth) {
     // * section: running user checks
-    this.errorHandler.userExistenceCheck('Updating note failed.', user);
+    this.errorHandler.userExistenceCheck('Updating note failed.', user, true);
 
     // * section: running note checks
     const note = await this.notesRepo.findOne({ where: { id: noteId, user } });
-    this.errorHandler.userExistenceCheck('Updating note failed.', user);
+    this.errorHandler.noteExistenceCheck('Updating note failed.', note, true);
 
     // * section: updating note by id
-    const { title, content } = data;
-    note.title = title || null;
-    note.content = content || null;
+    const { title = '', content = '' } = data;
+    note.title = title;
+    note.content = content;
     note.date = new Date();
     const updatedNote = await this.notesRepo.save(note);
     this.logger.log('Note was successfully updated.');

@@ -1,17 +1,14 @@
-// Nest JS Common
 import { Module } from '@nestjs/common';
-import { NotesService } from 'notes/notes.service';
-import { NotesController } from 'notes/notes.controller';
-
-//TypeORM
 import { TypeOrmModule } from '@nestjs/typeorm';
 
-//Entities
+import { NotesService } from 'notes/notes.service';
+import { NotesController } from 'notes/notes.controller';
 import { Note } from 'notes/entities/note.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Note])],
   providers: [NotesService],
   controllers: [NotesController],
+  imports: [TypeOrmModule.forFeature([Note])],
+  exports: [NotesService],
 })
 export class NotesModule {}

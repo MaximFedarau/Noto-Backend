@@ -1,9 +1,7 @@
-// Nest JS Common
 import { NestFactory } from '@nestjs/core';
-import { AppModule } from 'app.module';
-
-//Helmet
 import helmet from 'helmet';
+
+import { AppModule } from 'app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);

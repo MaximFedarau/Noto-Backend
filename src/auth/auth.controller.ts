@@ -1,4 +1,3 @@
-// Nest JS Common
 import {
   Logger,
   Controller,
@@ -13,19 +12,12 @@ import {
   Req,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { AuthGuard } from '@nestjs/passport';
 
-//Types
-import { AuthRequest } from 'types/authRequest';
-
-//DTOs
+import { AuthService } from 'auth/auth.service';
 import { SignUpDTO } from 'auth/dtos/signUp.dto';
 import { LogInDTO } from 'auth/dtos/logIn.dto';
-
-//Service
-import { AuthService } from 'auth/auth.service';
-
-//Passport
-import { AuthGuard } from '@nestjs/passport';
+import { AuthRequest } from 'types/authRequest';
 
 @Controller('auth')
 export class AuthController {

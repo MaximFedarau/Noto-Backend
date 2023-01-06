@@ -1,35 +1,45 @@
-import {
-  PipeTransform,
-  Injectable,
-  ArgumentMetadata,
-  BadRequestException,
-} from '@nestjs/common';
+import { PipeTransform, Injectable, ArgumentMetadata } from '@nestjs/common';
+import { WsException } from '@nestjs/websockets';
 import { plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
 
+import { WsErrorCodes } from 'types/ws/errorCodes';
+
 @Injectable()
-export class NotePipe implements PipeTransform {
+export class DeleteNotePipe implements PipeTransform {
   async transform(value: any, { metatype }: ArgumentMetadata) {
+    if (!value) {
+      throw new WsException({
+        status: WsErrorCodes.BAD_REQUEST,
+        message: ['No data submitted.'],
+        data: {
+          id: value,
+        },
+      });
+    }
+
     if (!metatype || !this.toValidate(metatype)) {
       return value;
     }
+
     const object = plainToInstance(metatype, value);
     const errors = await validate(object);
-
-    if (!errors.length && (value?.title || value?.content)) return value; // allow one of the values be undefined
 
     if (errors.length) {
       let errorMessages: string[] = [];
       errors.map((error) => {
         errorMessages = [...errorMessages, ...Object.values(error.constraints)];
       });
-      throw new BadRequestException(errorMessages, 'Validation failed');
+      throw new WsException({
+        status: WsErrorCodes.BAD_REQUEST,
+        message: errorMessages,
+        data: {
+          id: value,
+        },
+      });
     }
 
-    throw new BadRequestException(
-      ['At least one field is required.'],
-      'Validation failed',
-    );
+    return value;
   }
 
   private toValidate(metatype: Function): boolean {

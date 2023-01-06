@@ -1,16 +1,12 @@
-// Nest JS Common and Express
 import { UnauthorizedException } from '@nestjs/common';
 import { Request } from 'express';
-
-//Passport
-import { JWT_SECRET } from 'constants/jwt';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
-
-// TypeORM
-import { Auth } from 'auth/entities/auth.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+
+import { Auth } from 'auth/entities/auth.entity';
+import { JWT_SECRET } from 'constants/jwt';
 
 export class JWTStrategy extends PassportStrategy(Strategy) {
   constructor(
@@ -19,9 +15,9 @@ export class JWTStrategy extends PassportStrategy(Strategy) {
   ) {
     super({
       jwtFromRequest: ExtractJwt.fromExtractors([
-        (request: Request) => {
-          if (!request.headers.authorization) return null; // checking if token exists
-          const data = request.headers.authorization.slice(7); // cutting of the Bearer part
+        ({ headers }: Request) => {
+          if (!headers.authorization) return null; // checking if token exists
+          const data = headers.authorization.slice(7); // cutting of the Bearer part
           return data || null;
         },
       ]),
