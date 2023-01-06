@@ -19,7 +19,7 @@ export class WebSocketStrategy extends PassportStrategy(Strategy, 'ws') {
     super({
       jwtFromRequest: ExtractJwt.fromExtractors([
         ({ headers }: Request) => {
-          if (!headers || !headers.authorization) return null; // checking if token exists
+          if (!headers?.authorization) return null; // checking if token exists
           const data = headers.authorization.slice(7); // cutting of the Bearer part
           return data || null;
         },

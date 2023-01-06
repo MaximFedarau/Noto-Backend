@@ -61,9 +61,9 @@ export class NotesService {
     this.errorHandler.noteExistenceCheck('Updating note failed.', note, true);
 
     // * section: updating note by id
-    const { title, content } = data;
-    note.title = title || '';
-    note.content = content || '';
+    const { title = '', content = '' } = data;
+    note.title = title;
+    note.content = content;
     note.date = new Date();
     const updatedNote = await this.notesRepo.save(note);
     this.logger.log('Note was successfully updated.');
