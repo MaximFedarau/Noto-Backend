@@ -59,7 +59,7 @@ export class AuthController {
     /* getting uploaded file
     getting id: 1) set name of the folder; 2) assign image to the user */
     this.logger.log('Uploading image request was called.');
-    await this.authService.uploadImage(file, id);
+    return await this.authService.uploadImage(file, id);
   }
 
   // * section: working with tokens

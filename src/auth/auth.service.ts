@@ -135,6 +135,7 @@ export class AuthService {
       user.avatar = url;
       await this.authRepo.save(user);
       this.logger.log('Image was successfully saved.');
+      return url;
     } catch (error) {
       this.logger.error(
         'Image uploading failed.',
