@@ -18,18 +18,13 @@ export class NotesService {
   private readonly logger = new Logger(NotesService.name);
   private readonly errorHandler = new ErrorHandler(NotesService.name);
 
-  // * section: notes managing
-
-  async createNote(data: NoteDTO, user?: Auth) {
-    // * section: running user checks
+  async createNote({ title, content }: NoteDTO, user?: Auth) {
     this.errorHandler.userExistenceCheck(
       'Creating new note failed.',
       user,
       true,
     );
 
-    // * section: creating new note
-    const { title, content } = data;
     const newNote = new Note(new Date(), title, content, user);
     const createdNote = await this.notesRepo.save(newNote);
     this.logger.log('Note was successfully created.');
@@ -37,49 +32,35 @@ export class NotesService {
   }
 
   async deleteNote(noteId: string, user?: Auth) {
-    // * section: running user checks
     this.errorHandler.userExistenceCheck('Deleting note failed.', user, true);
 
-    // * section: running note checks
     const note = await this.notesRepo.findOne({ where: { id: noteId, user } });
     this.errorHandler.noteExistenceCheck('Deleting note failed.', note, true);
 
-    // * section: deleting note by id
     await this.notesRepo.remove(note);
     this.logger.log('Note was successfully deleted.');
-    return {
-      message: 'Note was successfully deleted.',
-    };
+    return { message: 'Note was successfully deleted.' };
   }
 
   async updateNote(noteId: string, data: NoteDTO, user?: Auth) {
-    // * section: running user checks
     this.errorHandler.userExistenceCheck('Updating note failed.', user, true);
 
-    // * section: running note checks
     const note = await this.notesRepo.findOne({ where: { id: noteId, user } });
     this.errorHandler.noteExistenceCheck('Updating note failed.', note, true);
 
-    // * section: updating note by id
     const { title = '', content = '' } = data;
-    note.title = title;
-    note.content = content;
-    note.date = new Date();
-    const updatedNote = await this.notesRepo.save(note);
+    const updatedNote = new Note(new Date(), title, content, user);
+    updatedNote.id = noteId;
+    await this.notesRepo.save(updatedNote);
     this.logger.log('Note was successfully updated.');
     return updatedNote;
   }
 
-  // * section: notes receiving
-
   async getNotePack(packNumber: number, patterns?: SearchDTO, user?: Auth) {
-    // * section: running received data checks
     this.errorHandler.userExistenceCheck('Getting note pack failed.', user);
-    if (packNumber < 0) {
+    if (packNumber < 0)
       throw new BadRequestException('Pack number cannot be less than 1.');
-    }
 
-    // * section: getting note packs
     const { pattern } = patterns;
     // using ILike to make search case insensitive
     const [notePack, totalNotes] = await this.notesRepo.findAndCount({
@@ -99,14 +80,11 @@ export class NotesService {
   }
 
   async getNoteById(noteId: string, user?: Auth) {
-    // * section: running user checks
     this.errorHandler.userExistenceCheck('Getting note failed.', user);
 
-    // * section: running note checks
     const note = await this.notesRepo.findOne({ where: { id: noteId, user } });
     this.errorHandler.noteExistenceCheck('Getting note failed.', note);
 
-    // * section: getting note by id
     this.logger.log('Note was successfully received.');
     return note;
   }

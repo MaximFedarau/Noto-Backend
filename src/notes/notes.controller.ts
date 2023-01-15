@@ -23,25 +23,22 @@ export class NotesController {
 
   private readonly logger = new Logger(NotesController.name);
 
-  // * section: notes receiving
   @Get('/pack/:packNumber')
   getNotePack(
-    @Req() req: AuthRequest,
+    @Req() { user }: AuthRequest,
     @Param('packNumber', new ParseIntPipe()) packNumber: number,
     @Query(new ValidationPipe()) patterns: SearchDTO,
   ) {
     this.logger.log('Getting note pack request was called.');
-    const { user } = req;
     return this.notesService.getNotePack(packNumber - 1, patterns, user); // decreasing pack number by 1, because pack number starts from 1
   }
 
   @Get('/:id')
   getNoteById(
-    @Req() req: AuthRequest,
+    @Req() { user }: AuthRequest,
     @Param('id', new ParseUUIDPipe()) id: string,
   ) {
     this.logger.log('Getting note by id request was called.');
-    const { user } = req;
     return this.notesService.getNoteById(id, user);
   }
 }

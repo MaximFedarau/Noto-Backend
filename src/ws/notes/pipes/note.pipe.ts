@@ -7,25 +7,21 @@ import { WsErrorCodes } from 'types/ws/errorCodes';
 
 @Injectable()
 export class NotePipe implements PipeTransform {
-  async transform(value: any, { metatype }: ArgumentMetadata) {
-    if (!value) {
+  async transform(note: any, { metatype }: ArgumentMetadata) {
+    if (!note) {
       throw new WsException({
         status: WsErrorCodes.BAD_REQUEST,
-        message: ['No data submitted'],
-        data: {
-          note: value,
-        },
+        message: ['No data submitted.'],
+        data: { note },
       });
     }
 
-    if (!metatype || !this.toValidate(metatype)) {
-      return value;
-    }
+    if (!metatype || !this.toValidate(metatype)) return note;
 
-    const object = plainToInstance(metatype, value);
+    const object = plainToInstance(metatype, note);
     const errors = await validate(object);
 
-    if (!errors.length && (value?.title || value?.content)) return value; // allow one of the values be undefined
+    if (!errors.length && (note?.title || note?.content)) return note; // allow one of the values be undefined
 
     if (errors.length) {
       let errorMessages: string[] = [];
@@ -35,18 +31,14 @@ export class NotePipe implements PipeTransform {
       throw new WsException({
         status: WsErrorCodes.BAD_REQUEST,
         message: errorMessages,
-        data: {
-          note: value,
-        },
+        data: { note },
       });
     }
 
     throw new WsException({
       status: WsErrorCodes.BAD_REQUEST,
-      message: ['At least one field is required'],
-      data: {
-        note: value,
-      },
+      message: ['At least one field is required.'],
+      data: { note },
     });
   }
 

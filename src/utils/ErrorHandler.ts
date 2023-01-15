@@ -17,9 +17,7 @@ export class ErrorHandler {
     if (user) return;
     this.logger.error(errorTitle, 'User does not exist.');
 
-    if (!isWS) {
-      throw new ForbiddenException('User does not exist.');
-    }
+    if (!isWS) throw new ForbiddenException('User does not exist.');
 
     throw new WsException({
       status: WsErrorCodes.FORBIDDEN,
@@ -31,9 +29,7 @@ export class ErrorHandler {
     if (note) return;
     this.logger.error(errorTitle, 'Note does not exist.');
 
-    if (!isWS) {
-      throw new ForbiddenException('Note does not exist.');
-    }
+    if (!isWS) throw new ForbiddenException('Note does not exist.');
 
     throw new WsException({
       status: WsErrorCodes.FORBIDDEN,

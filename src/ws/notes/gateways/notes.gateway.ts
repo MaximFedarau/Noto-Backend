@@ -16,12 +16,11 @@ import { GlobalExceptionsFilter } from 'ws/notes/filters/global.filter';
 import { LocalExceptionsFilter } from 'ws/notes/filters/local.filter';
 import { WebSocketAuthGuard } from 'ws/ws.guard';
 import { NotePipe } from 'ws/notes/pipes/note.pipe';
-import { DeleteNotePipe } from 'ws/notes/pipes/deleteNote.pipe';
+import { NoteIdPipe } from 'ws/notes/pipes/noteId.pipe';
 import { NoteDTO } from 'ws/notes/dtos/note.dto';
 import { WsRequest } from 'types/ws/wsRequest';
 import { NoteStatuses } from 'types/ws/noteStatuses';
-import { NoteIdDTO } from '../dtos/noteId.dto';
-import { NoteWithIdDTO } from '../dtos/noteWithId.dto';
+import { NoteWithIdDTO } from 'ws/notes/dtos/noteWithId.dto';
 
 @WebSocketGateway({
   namespace: 'notes',
@@ -49,19 +48,12 @@ export class NotesGateway
     @Request() { handshake }: WsRequest,
   ) {
     const { user } = handshake;
-    const { id, title, content, date } = await this.notesService.createNote(
-      messageBody,
-      user,
-    );
-
-    const data = {
-      status: NoteStatuses.CREATED,
-      note: { id, title, content, date },
-    };
+    const note = await this.notesService.createNote(messageBody, user);
+    const data = { status: NoteStatuses.CREATED, note };
 
     this.server.to(user.id).emit('global', data); // send to all room members
     client.emit('local', data);
-    this.logger.debug(`New note created: ${id}.`);
+    this.logger.debug(`New note created: ${note.id}.`);
   }
 
   @UseFilters(new LocalExceptionsFilter(NoteStatuses.DELETED))
@@ -69,16 +61,12 @@ export class NotesGateway
   @SubscribeMessage('deleteNote')
   async handleDeleteNote(
     @ConnectedSocket() client: Socket,
-    @MessageBody(new DeleteNotePipe()) { noteId }: NoteIdDTO,
+    @MessageBody('noteId', new NoteIdPipe()) noteId: string,
     @Request() { handshake }: WsRequest,
   ) {
     const { user } = handshake;
     await this.notesService.deleteNote(noteId, user);
-
-    const data = {
-      status: NoteStatuses.DELETED,
-      note: { id: noteId },
-    };
+    const data = { status: NoteStatuses.DELETED, note: { id: noteId } };
 
     // ? when deleting note, we send isDeleteOrigin flag as the second parameter
     // ? if true, it means, that the note was deleted by the user who receives message
@@ -106,11 +94,7 @@ export class NotesGateway
   ) {
     const { user } = handshake;
     const note = await this.notesService.updateNote(id, messageBody, user);
-
-    const data = {
-      status: NoteStatuses.UPDATED,
-      note,
-    };
+    const data = { status: NoteStatuses.UPDATED, note };
 
     this.server.to(user.id).emit('global', data); // send to all room members
     client.emit('local', data);
@@ -124,13 +108,11 @@ export class NotesGateway
     @ConnectedSocket() client: Socket,
     @Request() { handshake }: WsRequest,
   ) {
-    const id = handshake.user.id;
+    const { id } = handshake.user;
     client.join(id);
-    client.emit('joinRoom'); // pending
+    client.emit('joinRoom');
     this.logger.debug(`Client ${client.id} joined room ${id}.`);
   }
-
-  // * section: lifecycle hooks
 
   afterInit() {
     this.logger.log('Gateway initialized.');
