@@ -8,7 +8,7 @@ import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
-import { v2 } from 'cloudinary';
+import { UploadApiResponse, v2 } from 'cloudinary';
 
 import { Auth } from 'auth/entities/auth.entity';
 import { SignUpDTO } from 'auth/dtos/signUp.dto';
@@ -77,42 +77,64 @@ export class AuthService {
     this.logger.log('Public data was successfully sent.');
     return {
       nickname: user.nickname,
-      avatar: user.avatar,
+      avatar: user.thumbnail,
     };
   }
 
   // uploading image to Cloudinary method
-  streamUpload(
-    { buffer }: Express.Multer.File,
-    id: string,
-  ): Promise<{ url: string }> {
-    return new Promise((resolve, reject) => {
-      v2.uploader
-        .upload_stream(
+  async streamUpload({ buffer }: Express.Multer.File, id: string) {
+    const fullScaleAvatarResult: UploadApiResponse = await new Promise(
+      (resolve, reject) => {
+        v2.uploader
+          .upload_stream(
+            {
+              public_id: `NOTO/${id}/avatar`,
+              overwrite: true,
+            },
+            (error, result) => {
+              if (result) resolve(result);
+              else reject(error);
+            },
+          )
+          .end(buffer);
+      },
+    );
+    const thumbnailResult: UploadApiResponse = await new Promise(
+      (resolve, reject) => {
+        v2.uploader.upload(
+          fullScaleAvatarResult.url,
           {
-            public_id: `NOTO/${id}/avatar`,
+            public_id: `NOTO/${id}/thumbnail`,
             overwrite: true,
+            width: 512,
+            height: 512,
+            crop: 'scale',
           },
           (error, result) => {
             if (result) resolve(result);
             else reject(error);
           },
-        )
-        .end(buffer);
-    });
+        );
+      },
+    );
+    return [fullScaleAvatarResult.url, thumbnailResult.url];
   }
 
-  async uploadImage(file: Express.Multer.File, id: string) {
+  async uploadAvatar(file: Express.Multer.File, id: string) {
     const user = await this.authRepo.findOne({ where: { id } });
-    this.errorHandler.userExistenceCheck('Uploading image failed.', user);
+    this.errorHandler.userExistenceCheck('Image uploading failed.', user);
 
     try {
-      const { url } = await this.streamUpload(file, id);
+      const [fullScaleAvatarURL, thumbnailURL] = await this.streamUpload(
+        file,
+        id,
+      );
       this.logger.log('Image was successfully uploaded.');
-      user.avatar = url;
+      user.fullScaleAvatar = fullScaleAvatarURL;
+      user.thumbnail = thumbnailURL;
       await this.authRepo.save(user);
       this.logger.log('Image was successfully saved.');
-      return url;
+      return thumbnailURL;
     } catch (error) {
       this.logger.error('Image uploading failed.', error.message || error);
       throw new InternalServerErrorException('Image uploading failed.');

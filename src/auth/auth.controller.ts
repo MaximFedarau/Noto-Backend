@@ -47,14 +47,14 @@ export class AuthController {
   @UseGuards(AuthGuard('jwt'))
   @Post('/image/upload/:id')
   @UseInterceptors(FileInterceptor('file'))
-  async uploadImage(
+  async uploadAvatar(
     @UploadedFile() file: Express.Multer.File,
     @Param('id') id: string,
   ) {
     /* getting uploaded file
     getting id: 1) set name of the folder; 2) assign image to the user */
     this.logger.log('Uploading image request was called.');
-    return await this.authService.uploadImage(file, id);
+    return await this.authService.uploadAvatar(file, id);
   }
 
   @UseGuards(AuthGuard('jwt-refresh')) // checking validity of the token
