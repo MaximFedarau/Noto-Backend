@@ -7,7 +7,6 @@ import {
   Controller,
   Get,
   ParseUUIDPipe,
-  ParseIntPipe,
   ValidationPipe,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
@@ -23,14 +22,14 @@ export class NotesController {
 
   private readonly logger = new Logger(NotesController.name);
 
-  @Get('/pack/:packNumber')
+  @Get('/pack/:cursor')
   getNotePack(
     @Req() { user }: AuthRequest,
-    @Param('packNumber', new ParseIntPipe()) packNumber: number,
+    @Param('cursor') cursor: string,
     @Query(new ValidationPipe()) patterns: SearchDTO,
   ) {
     this.logger.log('Getting note pack request was called.');
-    return this.notesService.getNotePack(packNumber - 1, patterns, user); // decreasing pack number by 1, because pack number starts from 1
+    return this.notesService.getNotePack(cursor, patterns, user); // decreasing pack number by 1, because pack number starts from 1
   }
 
   @Get('/:id')

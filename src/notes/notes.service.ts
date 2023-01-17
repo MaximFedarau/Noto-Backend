@@ -1,6 +1,6 @@
-import { Injectable, Logger, BadRequestException } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, ILike } from 'typeorm';
+import { Repository, ILike, LessThan } from 'typeorm';
 
 import { Note } from 'notes/entities/note.entity';
 import { Auth } from 'auth/entities/auth.entity';
@@ -56,26 +56,29 @@ export class NotesService {
     return updatedNote;
   }
 
-  async getNotePack(packNumber: number, patterns?: SearchDTO, user?: Auth) {
+  // ? also we can use 2 cursors: id and date - id != otherId, date <= otherDate - this helps if 2 or more notes have the same date
+  async getNotePack(cursor: string, patterns?: SearchDTO, user?: Auth) {
     this.errorHandler.userExistenceCheck('Getting note pack failed.', user);
-    if (packNumber < 0)
-      throw new BadRequestException('Pack number cannot be less than 1.');
 
     const { pattern } = patterns;
-    // using ILike to make search case insensitive
+    const selectConditions = {
+      user,
+      ...(String(new Date(cursor)) !== 'Invalid Date' && {
+        date: LessThan(new Date(cursor)),
+      }),
+    };
     const [notePack, totalNotes] = await this.notesRepo.findAndCount({
       where: [
-        { user, title: ILike(`%${pattern || ''}%`) },
-        { user, content: ILike(`%${pattern || ''}%`) },
+        { ...selectConditions, title: ILike(`%${pattern || ''}%`) },
+        { ...selectConditions, content: ILike(`%${pattern || ''}%`) },
       ],
-      order: { date: 'ASC' },
-      skip: packNumber * 10,
+      order: { date: 'DESC' },
       take: 10,
     });
     this.logger.log('Note pack was successfully received.');
     return {
       notePack,
-      isEnd: totalNotes <= (packNumber + 1) * 10,
+      isEnd: totalNotes <= 10,
     };
   }
 
