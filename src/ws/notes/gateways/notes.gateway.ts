@@ -12,16 +12,19 @@ import { Logger, UseGuards, UseFilters, Request } from '@nestjs/common';
 import { Socket, Server } from 'socket.io';
 
 import { NotesService } from 'notes/notes.service';
-import { GlobalExceptionsFilter } from 'ws/notes/filters/global.filter';
 import { LocalExceptionsFilter } from 'ws/notes/filters/local.filter';
 import { WebSocketAuthGuard } from 'ws/ws.guard';
 import { NotePipe } from 'ws/notes/pipes/note.pipe';
-import { DeleteNotePipe } from 'ws/notes/pipes/deleteNote.pipe';
+import { NoteIdPipe } from 'ws/notes/pipes/noteId.pipe';
 import { NoteDTO } from 'ws/notes/dtos/note.dto';
 import { WsRequest } from 'types/ws/wsRequest';
 import { NoteStatuses } from 'types/ws/noteStatuses';
-import { NoteIdDTO } from '../dtos/noteId.dto';
-import { NoteWithIdDTO } from '../dtos/noteWithId.dto';
+import { NoteWithIdDTO } from 'ws/notes/dtos/noteWithId.dto';
+import { JwtService } from '@nestjs/jwt';
+import { WsErrorCodes } from 'types/ws/errorCodes';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Auth } from 'auth/entities/auth.entity';
 
 @WebSocketGateway({
   namespace: 'notes',
@@ -32,7 +35,12 @@ import { NoteWithIdDTO } from '../dtos/noteWithId.dto';
 export class NotesGateway
   implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
 {
-  constructor(private readonly notesService: NotesService) {}
+  constructor(
+    private readonly notesService: NotesService,
+    private readonly jwtService: JwtService,
+    @InjectRepository(Auth)
+    private readonly authRepository: Repository<Auth>,
+  ) {}
 
   private readonly logger = new Logger(NotesGateway.name);
 
@@ -49,19 +57,12 @@ export class NotesGateway
     @Request() { handshake }: WsRequest,
   ) {
     const { user } = handshake;
-    const { id, title, content, date } = await this.notesService.createNote(
-      messageBody,
-      user,
-    );
-
-    const data = {
-      status: NoteStatuses.CREATED,
-      note: { id, title, content, date },
-    };
+    const note = await this.notesService.createNote(messageBody, user);
+    const data = { status: NoteStatuses.CREATED, note };
 
     this.server.to(user.id).emit('global', data); // send to all room members
     client.emit('local', data);
-    this.logger.debug(`New note created: ${id}.`);
+    this.logger.debug(`New note created: ${note.id}.`);
   }
 
   @UseFilters(new LocalExceptionsFilter(NoteStatuses.DELETED))
@@ -69,16 +70,12 @@ export class NotesGateway
   @SubscribeMessage('deleteNote')
   async handleDeleteNote(
     @ConnectedSocket() client: Socket,
-    @MessageBody(new DeleteNotePipe()) { noteId }: NoteIdDTO,
+    @MessageBody('noteId', new NoteIdPipe()) noteId: string,
     @Request() { handshake }: WsRequest,
   ) {
     const { user } = handshake;
     await this.notesService.deleteNote(noteId, user);
-
-    const data = {
-      status: NoteStatuses.DELETED,
-      note: { id: noteId },
-    };
+    const data = { status: NoteStatuses.DELETED, note: { id: noteId } };
 
     // ? when deleting note, we send isDeleteOrigin flag as the second parameter
     // ? if true, it means, that the note was deleted by the user who receives message
@@ -106,38 +103,42 @@ export class NotesGateway
   ) {
     const { user } = handshake;
     const note = await this.notesService.updateNote(id, messageBody, user);
-
-    const data = {
-      status: NoteStatuses.UPDATED,
-      note,
-    };
+    const data = { status: NoteStatuses.UPDATED, note };
 
     this.server.to(user.id).emit('global', data); // send to all room members
     client.emit('local', data);
     this.logger.debug(`Note is updated: ${id}.`);
   }
 
-  @UseFilters(new GlobalExceptionsFilter())
-  @UseGuards(WebSocketAuthGuard)
-  @SubscribeMessage('joinRoom')
-  handleJoinRoom(
-    @ConnectedSocket() client: Socket,
-    @Request() { handshake }: WsRequest,
-  ) {
-    const id = handshake.user.id;
-    client.join(id);
-    client.emit('joinRoom'); // pending
-    this.logger.debug(`Client ${client.id} joined room ${id}.`);
-  }
+  async handleJoinRoom(client: Socket) {
+    const {
+      handshake: { headers },
+    } = client;
+    try {
+      if (!headers?.authorization) throw new Error();
 
-  // * section: lifecycle hooks
+      const { id }: { id: string } = this.jwtService.verify(
+        headers.authorization.slice(7),
+      );
+      const user = await this.authRepository.findOne({ where: { id } });
+
+      if (!user) throw new Error();
+
+      client.join(user.id);
+      client.emit('joinRoom');
+      this.logger.debug(`Client ${client.id} joined room ${user.id}.`);
+    } catch (error) {
+      client.emit('globalError', { status: WsErrorCodes.UNAUTHORIZED });
+    }
+  }
 
   afterInit() {
     this.logger.log('Gateway initialized.');
   }
 
-  handleConnection(client: Socket) {
+  async handleConnection(client: Socket) {
     this.logger.debug(`Client connected: ${client.id}.`);
+    await this.handleJoinRoom(client);
   }
 
   handleDisconnect(client: Socket) {

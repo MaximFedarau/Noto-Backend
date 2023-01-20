@@ -14,7 +14,10 @@ export class Auth {
   password: string;
 
   @Column({ nullable: true })
-  avatar?: string;
+  fullScaleAvatar?: string;
+
+  @Column({ nullable: true })
+  thumbnail?: string;
 
   @OneToMany(() => Note, (note) => note.user, { cascade: true })
   notes: Note[];

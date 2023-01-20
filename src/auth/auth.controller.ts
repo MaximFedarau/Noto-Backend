@@ -25,8 +25,6 @@ export class AuthController {
 
   private readonly logger = new Logger(AuthController.name);
 
-  // * section: working with credentials
-
   @Post('/signup')
   signUp(@Body(new ValidationPipe()) body: SignUpDTO) {
     this.logger.log('Signup request was called.');
@@ -39,36 +37,30 @@ export class AuthController {
     return this.authService.logIn(body);
   }
 
-  // * section: working with data
-
   @UseGuards(AuthGuard('jwt'))
   @Get('/user')
-  getUserPublicData(@Req() req: AuthRequest) {
+  getUserPublicData(@Req() { user: { id } }: AuthRequest) {
     this.logger.log('Fetching public data request was called.');
-    const { id } = req.user;
     return this.authService.getUserPublicData(id);
   }
 
   @UseGuards(AuthGuard('jwt'))
   @Post('/image/upload/:id')
   @UseInterceptors(FileInterceptor('file'))
-  async uploadImage(
+  async uploadAvatar(
     @UploadedFile() file: Express.Multer.File,
     @Param('id') id: string,
   ) {
     /* getting uploaded file
     getting id: 1) set name of the folder; 2) assign image to the user */
     this.logger.log('Uploading image request was called.');
-    await this.authService.uploadImage(file, id);
+    return await this.authService.uploadAvatar(file, id);
   }
-
-  // * section: working with tokens
 
   @UseGuards(AuthGuard('jwt-refresh')) // checking validity of the token
   @Post('/token/refresh')
-  refreshToken(@Req() req: AuthRequest) {
+  refreshToken(@Req() { user }: AuthRequest) {
     this.logger.log('Tokens refreshing request was called.');
-    const { user } = req;
     return this.authService.refreshToken(user);
   }
 }

@@ -1,7 +1,6 @@
 import { PassportStrategy } from '@nestjs/passport';
 import { WsException } from '@nestjs/websockets';
-import { Strategy } from 'passport-jwt';
-import { ExtractJwt } from 'passport-jwt';
+import { Strategy, ExtractJwt } from 'passport-jwt';
 import { Request } from 'express';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -28,12 +27,9 @@ export class WebSocketStrategy extends PassportStrategy(Strategy, 'ws') {
     });
   }
 
-  async validate(payload: { id: string }) {
-    const { id } = payload;
+  async validate({ id }: { id: string }) {
     const user = await this.authRepository.findOne({ where: { id } });
-    if (!user) {
-      throw new WsException('Unauthorized');
-    }
+    if (!user) throw new WsException('Unauthorized');
     return user;
   }
 }
